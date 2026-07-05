@@ -97,8 +97,28 @@ const getTechnicianById = async (id: string) => {
   return result;
 };
 
+const getAllCategories = async (query: { sortBy?: string }) => {
+  let orderBy: any = { createdAt: "desc" };
+
+  if (query.sortBy === "name") {
+    orderBy = { name: "asc" };
+  } else if (query.sortBy === "createdAt") {
+    orderBy = { createdAt: "desc" };
+  }
+
+  const result = await prisma.category.findMany({
+    orderBy,
+    include: {
+      _count: { select: { services: true } },
+    },
+  });
+
+  return result;
+};
+
 export const ServiceServices = {
   getAllServices,
   getAllTechnicians,
   getTechnicianById,
+  getAllCategories,
 };

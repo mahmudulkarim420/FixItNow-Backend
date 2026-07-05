@@ -43,8 +43,23 @@ const getTechnicianById = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await ServiceServices.getAllCategories(req.query);
+
+    res.status(200).json({
+      success: true,
+      message: "Categories retrieved successfully!",
+      data: result,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const ServiceControllers = {
   getAllServices,
   getAllTechnicians,
   getTechnicianById,
+  getAllCategories,
 };

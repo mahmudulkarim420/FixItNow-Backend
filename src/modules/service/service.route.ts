@@ -4,6 +4,7 @@ import { ServiceControllers } from "./service.controller";
 const router = express.Router();
 
 router.get("/", ServiceControllers.getAllServices);
+router.get("/categories", ServiceControllers.getAllCategories);
 router.get("/technicians", ServiceControllers.getAllTechnicians);
 router.get("/technicians/:id", ServiceControllers.getTechnicianById);
 
