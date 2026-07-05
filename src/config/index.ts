@@ -14,6 +14,10 @@ const config = {
     refreshSecret: process.env.JWT_REFRESH_SECRET || "refresh_secret",
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    publicKey: process.env.STRIPE_PUBLIC_KEY,
+  },
 };
 
 export default config;

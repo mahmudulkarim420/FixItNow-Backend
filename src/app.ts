@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import { AuthRoutes } from "./modules/auth/auth.route";
 import { ServiceRoutes } from "./modules/service/service.route";
 import { BookingRoutes } from "./modules/booking/booking.route";
+import { PaymentRoutes } from "./modules/payment/payment.route";
 import AppError from "./utils/AppError";
 import cookieParser from "cookie-parser";
 
@@ -16,6 +17,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", AuthRoutes);
 app.use("/api/services", ServiceRoutes);
 app.use("/api/bookings", BookingRoutes);
+app.use("/api/payments", PaymentRoutes);
 
 app.use((req, _res, next) => {
   next(new AppError(404, `Route not found: ${req.originalUrl}`));
