@@ -5,6 +5,7 @@ import { BookingRoutes } from "./modules/booking/booking.route";
 import { PaymentRoutes } from "./modules/payment/payment.route";
 import { TechnicianRoutes } from "./modules/technician/technician.route";
 import { ReviewRoutes } from "./modules/review/review.route";
+import { AdminRoutes } from "./modules/admin/admin.route";
 import AppError from "./utils/AppError";
 import cookieParser from "cookie-parser";
 
@@ -22,6 +23,7 @@ app.use("/api/bookings", BookingRoutes);
 app.use("/api/payments", PaymentRoutes);
 app.use("/api/technician", TechnicianRoutes);
 app.use("/api/reviews", ReviewRoutes);
+app.use("/api/admin", AdminRoutes);
 
 app.use((req, _res, next) => {
   next(new AppError(404, `Route not found: ${req.originalUrl}`));

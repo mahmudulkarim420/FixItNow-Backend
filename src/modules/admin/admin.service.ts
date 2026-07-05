@@ -1,0 +1,74 @@
+import { prisma } from "../../lib/prisma";
+import AppError from "../../utils/AppError";
+
+const getAllUsers = async () => {
+  const result = await prisma.user.findMany({
+    omit: { password: true },
+    include: { technicianProfile: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
+const toggleUserStatus = async (userId: string, status: string) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AppError(404, "User not found!");
+  }
+
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: { status: status as any },
+    omit: { password: true },
+  });
+
+  return result;
+};
+
+const getAllBookings = async () => {
+  const result = await prisma.booking.findMany({
+    include: {
+      service: true,
+      customer: { select: { name: true, email: true } },
+      technicianProfile: { include: { user: { select: { name: true } } } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
+const getAllCategoriesAdmin = async () => {
+  const result = await prisma.category.findMany({
+    include: { _count: { select: { services: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
+const createCategory = async (payload: { name: string; description?: string }) => {
+  const existing = await prisma.category.findFirst({
+    where: { name: payload.name },
+  });
+
+  if (existing) {
+    throw new AppError(409, "Category with this name already exists!");
+  }
+
+  const result = await prisma.category.create({
+    data: payload,
+  });
+
+  return result;
+};
+
+export const AdminServices = {
+  getAllUsers,
+  toggleUserStatus,
+  getAllBookings,
+  getAllCategoriesAdmin,
+  createCategory,
+};
