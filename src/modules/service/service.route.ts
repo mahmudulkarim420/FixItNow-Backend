@@ -2,6 +2,8 @@ import express from "express";
 import { ServiceControllers } from "./service.controller";
 import { ServiceValidations } from "./service.validation";
 import validateRequest from "../../middlewares/validateRequest";
+import validateParams from "../../middlewares/validateParams";
+import { idParamValidationSchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
 
 const router = express.Router();
@@ -9,8 +11,16 @@ const router = express.Router();
 router.get("/", ServiceControllers.getAllServices);
 router.get("/categories", ServiceControllers.getAllCategories);
 router.get("/technicians", ServiceControllers.getAllTechnicians);
-router.get("/technicians/:id", ServiceControllers.getTechnicianById);
-router.get("/:id", ServiceControllers.getServiceById);
+router.get(
+  "/technicians/:id",
+  validateParams(idParamValidationSchema),
+  ServiceControllers.getTechnicianById
+);
+router.get(
+  "/:id",
+  validateParams(idParamValidationSchema),
+  ServiceControllers.getServiceById
+);
 
 router.post(
   "/",
@@ -22,6 +32,7 @@ router.post(
 router.patch(
   "/:id",
   auth("TECHNICIAN"),
+  validateParams(idParamValidationSchema),
   validateRequest(ServiceValidations.updateServiceValidationSchema),
   ServiceControllers.updateService
 );
@@ -29,6 +40,7 @@ router.patch(
 router.delete(
   "/:id",
   auth("TECHNICIAN"),
+  validateParams(idParamValidationSchema),
   ServiceControllers.deleteService
 );
 

@@ -2,6 +2,8 @@ import express from "express";
 import { PaymentControllers } from "./payment.controller";
 import { PaymentValidations } from "./payment.validation";
 import validateRequest from "../../middlewares/validateRequest";
+import validateParams from "../../middlewares/validateParams";
+import { idParamValidationSchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
 
 const router = express.Router();
@@ -29,6 +31,7 @@ router.get(
 router.get(
   "/:id",
   auth("CUSTOMER", "ADMIN"),
+  validateParams(idParamValidationSchema),
   PaymentControllers.getPaymentById
 );
 

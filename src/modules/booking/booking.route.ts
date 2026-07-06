@@ -2,6 +2,8 @@ import express from "express";
 import { BookingControllers } from "./booking.controller";
 import { BookingValidations } from "./booking.validation";
 import validateRequest from "../../middlewares/validateRequest";
+import validateParams from "../../middlewares/validateParams";
+import { idParamValidationSchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
 
 const router = express.Router();
@@ -22,12 +24,14 @@ router.get(
 router.get(
   "/:id",
   auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
+  validateParams(idParamValidationSchema),
   BookingControllers.getBookingById
 );
 
 router.patch(
   "/:id/cancel",
   auth("CUSTOMER"),
+  validateParams(idParamValidationSchema),
   BookingControllers.cancelBooking
 );
 
