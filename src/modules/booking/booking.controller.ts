@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 
 const createBooking = catchAsync(async (req: Request, res: Response) => {
-  const result = await BookingServices.createBooking(req.user!.id as string, req.body);
+  const result = await BookingServices.createBooking(req.user!.id, req.body);
 
   sendResponse(res, {
     statusCode: 201,
@@ -15,8 +15,8 @@ const createBooking = catchAsync(async (req: Request, res: Response) => {
 
 const getAllBookings = catchAsync(async (req: Request, res: Response) => {
   const { data, meta } = await BookingServices.getAllBookings(
-    req.user!.id as string,
-    req.user!.role as string,
+    req.user!.id,
+    req.user!.role,
     req.query
   );
 
@@ -31,8 +31,8 @@ const getAllBookings = catchAsync(async (req: Request, res: Response) => {
 const getBookingById = catchAsync(async (req: Request, res: Response) => {
   const result = await BookingServices.getBookingById(
     req.params.id as string,
-    req.user!.id as string,
-    req.user!.role as string
+    req.user!.id,
+    req.user!.role
   );
 
   sendResponse(res, {
@@ -45,7 +45,7 @@ const getBookingById = catchAsync(async (req: Request, res: Response) => {
 const cancelBooking = catchAsync(async (req: Request, res: Response) => {
   const result = await BookingServices.cancelBooking(
     req.params.id as string,
-    req.user!.id as string
+    req.user!.id
   );
 
   sendResponse(res, {

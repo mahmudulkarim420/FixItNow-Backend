@@ -32,7 +32,7 @@ export const auth = (...requiredRoles: string[]) => {
         throw new AppError(403, 'You have no permission to access this route!');
       }
 
-      req.user = decoded as JwtPayload;
+      req.user = { ...decoded, id: user.id, role: user.role };
 
       next();
     } catch (error) {

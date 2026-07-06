@@ -15,11 +15,11 @@ const config = {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
   },
   stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY,
-    publicKey: process.env.STRIPE_PUBLIC_KEY,
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    secretKey: process.env.STRIPE_SECRET_KEY ?? "",
+    publicKey: process.env.STRIPE_PUBLIC_KEY ?? "",
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
   },
-  nodeEnv: process.env.NODE_ENV,
+  nodeEnv: process.env.NODE_ENV ?? "development",
 };
 
 export default config;

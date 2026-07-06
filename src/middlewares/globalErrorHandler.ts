@@ -22,14 +22,17 @@ const handlePrismaError = (err: Prisma.PrismaClientKnownRequestError) => {
   switch (err.code) {
     case "P2002": {
       statusCode = 409;
-      const target = ((err.meta?.target as string[]) ?? []).join(", ");
+      const metaTarget = err.meta?.target;
+      const target =
+        Array.isArray(metaTarget) ? metaTarget.join(", ") : "";
       message = `Duplicate value for: ${target}`;
       errorSources.push({ path: target, message });
       break;
     }
     case "P2025": {
       statusCode = 404;
-      message = (err.meta?.cause as string) ?? "Record not found";
+      const metaCause = err.meta?.cause;
+      message = typeof metaCause === "string" ? metaCause : "Record not found";
       errorSources.push({ path: "", message });
       break;
     }

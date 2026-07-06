@@ -26,7 +26,7 @@ const getTechnicianBookings = async (userId: string) => {
 const updateBookingStatus = async (
   bookingId: string,
   userId: string,
-  status: string
+  status: BookingStatus
 ) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -50,7 +50,7 @@ const updateBookingStatus = async (
 
   const result = await prisma.booking.update({
     where: { id: bookingId },
-    data: { status: status as BookingStatus },
+    data: { status },
     include: {
       service: true,
       customer: { select: { name: true, email: true } },

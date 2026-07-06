@@ -76,17 +76,13 @@ const loginUser = async (payload: { email: string; password: string }) => {
 
   const jwtPayload = { id: user.id, email: user.email, role: user.role };
 
-  const accessToken = jwt.sign(
-    jwtPayload,
-    config.jwt.secret,
-    { expiresIn: config.jwt.expiresIn } as jwt.SignOptions
-  );
+  const accessToken = jwt.sign(jwtPayload, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn,
+  } as jwt.SignOptions);
 
-  const refreshToken = jwt.sign(
-    jwtPayload,
-    config.jwt.refreshSecret,
-    { expiresIn: config.jwt.refreshExpiresIn } as jwt.SignOptions
-  );
+  const refreshToken = jwt.sign(jwtPayload, config.jwt.refreshSecret, {
+    expiresIn: config.jwt.refreshExpiresIn,
+  } as jwt.SignOptions);
 
   const userWithoutPassword = await prisma.user.findUnique({
     where: { email: payload.email },

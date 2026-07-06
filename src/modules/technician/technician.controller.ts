@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 
 const getTechnicianBookings = catchAsync(async (req: Request, res: Response) => {
-  const result = await TechnicianServices.getTechnicianBookings(req.user!.id as string);
+  const result = await TechnicianServices.getTechnicianBookings(req.user!.id);
 
   sendResponse(res, {
     statusCode: 200,
@@ -16,7 +16,7 @@ const getTechnicianBookings = catchAsync(async (req: Request, res: Response) => 
 const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
   const result = await TechnicianServices.updateBookingStatus(
     req.params.id as string,
-    req.user!.id as string,
+    req.user!.id,
     req.body.status
   );
 
@@ -28,7 +28,7 @@ const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
-  const result = await TechnicianServices.updateProfile(req.user!.id as string, req.body);
+  const result = await TechnicianServices.updateProfile(req.user!.id, req.body);
 
   sendResponse(res, {
     statusCode: 200,
@@ -39,7 +39,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
 
 const updateAvailability = catchAsync(async (req: Request, res: Response) => {
   const result = await TechnicianServices.updateAvailability(
-    req.user!.id as string,
+    req.user!.id,
     req.body.availability
   );
 

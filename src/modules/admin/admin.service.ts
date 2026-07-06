@@ -25,7 +25,7 @@ const getAllUsers = async (query: {
   return { data, meta: buildMeta(page, limit, total) };
 };
 
-const toggleUserStatus = async (userId: string, status: string) => {
+const toggleUserStatus = async (userId: string, status: Status) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
@@ -34,7 +34,7 @@ const toggleUserStatus = async (userId: string, status: string) => {
 
   const result = await prisma.user.update({
     where: { id: userId },
-    data: { status: status as Status },
+    data: { status },
     omit: { password: true },
   });
 

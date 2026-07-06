@@ -37,7 +37,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthServices.getMe(req.user!.id as string);
+  const result = await AuthServices.getMe(req.user!.id);
 
   sendResponse(res, {
     statusCode: 200,

@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 
 const createReview = catchAsync(async (req: Request, res: Response) => {
-  const result = await ReviewServices.createReview(req.user!.id as string, req.body);
+  const result = await ReviewServices.createReview(req.user!.id, req.body);
 
   sendResponse(res, {
     statusCode: 201,

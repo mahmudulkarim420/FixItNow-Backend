@@ -25,7 +25,7 @@ const getServiceById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const createService = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceServices.createService(req.user!.id as string, req.body);
+  const result = await ServiceServices.createService(req.user!.id, req.body);
 
   sendResponse(res, {
     statusCode: 201,
@@ -37,7 +37,7 @@ const createService = catchAsync(async (req: Request, res: Response) => {
 const updateService = catchAsync(async (req: Request, res: Response) => {
   const result = await ServiceServices.updateService(
     req.params.id as string,
-    req.user!.id as string,
+    req.user!.id,
     req.body
   );
 
@@ -51,7 +51,7 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
 const deleteService = catchAsync(async (req: Request, res: Response) => {
   const result = await ServiceServices.deleteService(
     req.params.id as string,
-    req.user!.id as string
+    req.user!.id
   );
 
   sendResponse(res, {

@@ -10,7 +10,7 @@ import stripe from "../../lib/stripe";
 const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
   const result = await PaymentServices.createPaymentIntent(
     req.body.bookingId,
-    req.user!.id as string
+    req.user!.id
   );
 
   sendResponse(res, {
@@ -21,7 +21,7 @@ const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
 });
 
 const confirmPayment = catchAsync(async (req: Request, res: Response) => {
-  const result = await PaymentServices.confirmPayment(req.body, req.user!.id as string);
+  const result = await PaymentServices.confirmPayment(req.body, req.user!.id);
 
   sendResponse(res, {
     statusCode: 200,
@@ -32,8 +32,8 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
 
 const getUserPaymentHistory = catchAsync(async (req: Request, res: Response) => {
   const result = await PaymentServices.getUserPaymentHistory(
-    req.user!.id as string,
-    req.user!.role as string
+    req.user!.id,
+    req.user!.role
   );
 
   sendResponse(res, {
@@ -46,8 +46,8 @@ const getUserPaymentHistory = catchAsync(async (req: Request, res: Response) => 
 const getPaymentById = catchAsync(async (req: Request, res: Response) => {
   const result = await PaymentServices.getPaymentById(
     req.params.id as string,
-    req.user!.id as string,
-    req.user!.role as string
+    req.user!.id,
+    req.user!.role
   );
 
   sendResponse(res, {
@@ -58,8 +58,12 @@ const getPaymentById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
-  const signature = req.headers["stripe-signature"] as string;
-  const endpointSecret = config.stripe.webhookSecret as string;
+  const signature = req.headers["stripe-signature"];
+  const endpointSecret = config.stripe.webhookSecret;
+
+  if (!signature || Array.isArray(signature)) {
+    throw new AppError(400, "Missing or invalid Stripe signature header");
+  }
 
   let event: Stripe.Event;
 
@@ -70,7 +74,7 @@ const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
       endpointSecret
     );
   } catch (err) {
-    throw new AppError(400, `Webhook signature verification failed: ${(err as Error).message}`);
+    throw new AppError(400, `Webhook signature verification failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   await PaymentServices.handleStripeEvent(event);
