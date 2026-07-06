@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { AuthServices } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
+import AppError from "../../utils/AppError";
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.registerUser(req.body);
@@ -65,9 +66,38 @@ const logout = catchAsync(async (_req: Request, res: Response) => {
   });
 });
 
+const refreshToken = catchAsync(async (req: Request, res: Response) => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    throw new AppError(401, "Refresh token is missing!");
+  }
+
+  const result = await AuthServices.refreshToken(token);
+
+  res.cookie("accessToken", result.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  res.cookie("refreshToken", result.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Access token refreshed successfully!",
+    data: null,
+  });
+});
+
 export const AuthControllers = {
   registerUser,
   loginUser,
   getMe,
   logout,
+  refreshToken,
 };

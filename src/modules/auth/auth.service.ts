@@ -109,8 +109,47 @@ const getMe = async (userId: string) => {
   return result;
 };
 
+const refreshToken = async (token: string) => {
+  let decoded: jwt.JwtPayload;
+
+  try {
+    decoded = jwt.verify(token, config.jwt.refreshSecret) as jwt.JwtPayload;
+  } catch {
+    throw new AppError(401, "Invalid or expired refresh token!");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.id },
+  });
+
+  if (!user) {
+    throw new AppError(404, "User not found!");
+  }
+
+  if (user.status === "BANNED") {
+    throw new AppError(403, "This user account has been banned!");
+  }
+
+  const jwtPayload = { id: user.id, email: user.email, role: user.role };
+
+  const newAccessToken = jwt.sign(
+    jwtPayload,
+    config.jwt.secret,
+    { expiresIn: config.jwt.expiresIn } as jwt.SignOptions
+  );
+
+  const newRefreshToken = jwt.sign(
+    jwtPayload,
+    config.jwt.refreshSecret,
+    { expiresIn: config.jwt.refreshExpiresIn } as jwt.SignOptions
+  );
+
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+};
+
 export const AuthServices = {
   registerUser,
   loginUser,
   getMe,
+  refreshToken,
 };
