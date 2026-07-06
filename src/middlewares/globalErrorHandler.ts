@@ -23,10 +23,10 @@ const handlePrismaError = (err: Prisma.PrismaClientKnownRequestError) => {
     case "P2002": {
       statusCode = 409;
       const metaTarget = err.meta?.target;
-      const target =
-        Array.isArray(metaTarget) ? metaTarget.join(", ") : "";
-      message = `Duplicate value for: ${target}`;
-      errorSources.push({ path: target, message });
+      const target = Array.isArray(metaTarget) ? metaTarget[0] : "";
+      const field = target || "field";
+      message = `A record with this ${field} already exists`;
+      errorSources.push({ path: field, message });
       break;
     }
     case "P2025": {

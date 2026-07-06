@@ -14,6 +14,7 @@ CREATE TABLE "TechnicianProfile" (
     "hourlyRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "location" TEXT NOT NULL DEFAULT '',
     "totalReviews" INTEGER NOT NULL DEFAULT 0,
+    "averageRating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "availability" JSONB NOT NULL DEFAULT '{}',
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
