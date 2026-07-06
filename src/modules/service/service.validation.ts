@@ -18,6 +18,9 @@ const updateServiceValidationSchema = z.object({
   }),
 });
 
+export type TCreateServicePayload = z.infer<typeof createServiceValidationSchema>["body"];
+export type TUpdateServicePayload = z.infer<typeof updateServiceValidationSchema>["body"];
+
 export const ServiceValidations = {
   createServiceValidationSchema,
   updateServiceValidationSchema,

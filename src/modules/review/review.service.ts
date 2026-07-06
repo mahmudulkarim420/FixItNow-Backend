@@ -1,9 +1,10 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import type { TCreateReviewPayload } from "./review.validation";
 
 const createReview = async (
   customerId: string,
-  payload: { bookingId: string; rating: number; comment?: string }
+  payload: TCreateReviewPayload
 ) => {
   const booking = await prisma.booking.findUnique({
     where: { id: payload.bookingId },

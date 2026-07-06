@@ -4,16 +4,12 @@ import stripe from "../../lib/stripe";
 import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma } from "../../../generated/prisma/client";
 import { assertTransition } from "./bookingStatus";
+import type { PaginationQuery } from "../../interfaces/payloads";
+import type { TCreateBookingPayload } from "./booking.validation";
 
 const createBooking = async (
   customerId: string,
-  payload: {
-    serviceId: string;
-    technicianProfileId: string;
-    scheduledDate: string;
-    timeSlot: string;
-    contactNumber: string;
-  },
+  payload: TCreateBookingPayload,
 ) => {
   const service = await prisma.service.findUnique({
     where: { id: payload.serviceId },
@@ -47,12 +43,7 @@ const createBooking = async (
 const getAllBookings = async (
   userId: string,
   role: string,
-  query: {
-    page?: string;
-    limit?: string;
-    sortBy?: string;
-    sortOrder?: string;
-  }
+  query: PaginationQuery
 ) => {
   const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
   const where: Prisma.BookingWhereInput = {};

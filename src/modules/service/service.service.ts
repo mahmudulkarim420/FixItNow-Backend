@@ -2,17 +2,17 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma } from "../../../generated/prisma/client";
+import type { PaginationQuery } from "../../interfaces/payloads";
+import type { TCreateServicePayload, TUpdateServicePayload } from "./service.validation";
 
-const getAllServices = async (query: {
+type ServiceQuery = PaginationQuery & {
   search?: string;
   categoryId?: string;
   minPrice?: string;
   maxPrice?: string;
-  page?: string;
-  limit?: string;
-  sortBy?: string;
-  sortOrder?: string;
-}) => {
+};
+
+const getAllServices = async (query: ServiceQuery) => {
   const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
   const where: Prisma.ServiceWhereInput = {};
 
@@ -78,12 +78,7 @@ const getServiceById = async (id: string) => {
 
 const createService = async (
   userId: string,
-  payload: {
-    title: string;
-    description: string;
-    price: number;
-    categoryId: string;
-  }
+  payload: TCreateServicePayload
 ) => {
   const technicianProfile = await prisma.technicianProfile.findUnique({
     where: { userId },
@@ -126,12 +121,7 @@ const createService = async (
 const updateService = async (
   serviceId: string,
   userId: string,
-  payload: {
-    title?: string;
-    description?: string;
-    price?: number;
-    categoryId?: string;
-  }
+  payload: TUpdateServicePayload
 ) => {
   const service = await prisma.service.findUnique({
     where: { id: serviceId },

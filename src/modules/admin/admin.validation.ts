@@ -20,6 +20,10 @@ const updateCategoryValidationSchema = z.object({
   }),
 });
 
+export type TToggleUserStatusPayload = z.infer<typeof toggleUserStatusValidationSchema>["body"];
+export type TCreateCategoryPayload = z.infer<typeof createCategoryValidationSchema>["body"];
+export type TUpdateCategoryPayload = z.infer<typeof updateCategoryValidationSchema>["body"];
+
 export const AdminValidations = {
   toggleUserStatusValidationSchema,
   createCategoryValidationSchema,

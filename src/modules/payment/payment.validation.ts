@@ -14,6 +14,9 @@ const confirmPaymentValidationSchema = z.object({
   }),
 });
 
+export type TCreatePaymentIntentPayload = z.infer<typeof createPaymentIntentValidationSchema>["body"];
+export type TConfirmPaymentPayload = z.infer<typeof confirmPaymentValidationSchema>["body"];
+
 export const PaymentValidations = {
   createPaymentIntentValidationSchema,
   confirmPaymentValidationSchema,

@@ -3,14 +3,11 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import config from "../../config";
-import { Prisma, Role } from "../../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
+import type { JwtPayload } from "../../interfaces/payloads";
+import type { TRegisterPayload, TLoginPayload } from "./auth.validation";
 
-const registerUser = async (payload: {
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-}) => {
+const registerUser = async (payload: TRegisterPayload) => {
   const isUserExists = await prisma.user.findUnique({
     where: { email: payload.email },
   });
@@ -53,7 +50,7 @@ const registerUser = async (payload: {
   return result;
 };
 
-const loginUser = async (payload: { email: string; password: string }) => {
+const loginUser = async (payload: TLoginPayload) => {
   const user = await prisma.user.findUnique({
     where: { email: payload.email },
   });
@@ -74,7 +71,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new AppError(401, "Invalid password!");
   }
 
-  const jwtPayload = { id: user.id, email: user.email, role: user.role };
+  const jwtPayload: JwtPayload = { id: user.id, email: user.email, role: user.role };
 
   const accessToken = jwt.sign(jwtPayload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
@@ -126,7 +123,7 @@ const refreshToken = async (token: string) => {
     throw new AppError(403, "This user account has been banned!");
   }
 
-  const jwtPayload = { id: user.id, email: user.email, role: user.role };
+  const jwtPayload: JwtPayload = { id: user.id, email: user.email, role: user.role };
 
   const newAccessToken = jwt.sign(
     jwtPayload,

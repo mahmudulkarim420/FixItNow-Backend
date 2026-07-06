@@ -12,6 +12,8 @@ const createReviewValidationSchema = z.object({
   }),
 });
 
+export type TCreateReviewPayload = z.infer<typeof createReviewValidationSchema>["body"];
+
 export const ReviewValidations = {
   createReviewValidationSchema,
 };

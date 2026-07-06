@@ -24,6 +24,10 @@ const updateAvailabilityValidationSchema = z.object({
   }),
 });
 
+export type TUpdateBookingStatusPayload = z.infer<typeof updateBookingStatusValidationSchema>["body"];
+export type TUpdateProfilePayload = z.infer<typeof updateProfileValidationSchema>["body"];
+export type TUpdateAvailabilityPayload = z.infer<typeof updateAvailabilityValidationSchema>["body"];
+
 export const TechnicianValidations = {
   updateBookingStatusValidationSchema,
   updateProfileValidationSchema,

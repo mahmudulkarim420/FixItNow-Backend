@@ -2,13 +2,10 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma, Status } from "../../../generated/prisma/client";
+import type { PaginationQuery } from "../../interfaces/payloads";
+import type { TCreateCategoryPayload, TUpdateCategoryPayload } from "./admin.validation";
 
-const getAllUsers = async (query: {
-  page?: string;
-  limit?: string;
-  sortBy?: string;
-  sortOrder?: string;
-}) => {
+const getAllUsers = async (query: PaginationQuery) => {
   const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
 
   const [data, total] = await Promise.all([
@@ -41,12 +38,7 @@ const toggleUserStatus = async (userId: string, status: Status) => {
   return result;
 };
 
-const getAllBookings = async (query: {
-  page?: string;
-  limit?: string;
-  sortBy?: string;
-  sortOrder?: string;
-}) => {
+const getAllBookings = async (query: PaginationQuery) => {
   const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
 
   const [data, total] = await Promise.all([
@@ -94,7 +86,7 @@ const getAllCategoriesAdmin = async () => {
   return result;
 };
 
-const createCategory = async (payload: { name: string; description?: string }) => {
+const createCategory = async (payload: TCreateCategoryPayload) => {
   const existing = await prisma.category.findFirst({
     where: { name: payload.name },
   });
@@ -112,7 +104,7 @@ const createCategory = async (payload: { name: string; description?: string }) =
 
 const updateCategory = async (
   categoryId: string,
-  payload: { name?: string; description?: string }
+  payload: TUpdateCategoryPayload
 ) => {
   const category = await prisma.category.findUnique({
     where: { id: categoryId },

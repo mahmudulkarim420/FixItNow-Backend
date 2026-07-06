@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { Prisma, BookingStatus } from "../../../generated/prisma/client";
+import type { TUpdateProfilePayload } from "./technician.validation";
 
 const getTechnicianBookings = async (userId: string) => {
   const technicianProfile = await prisma.technicianProfile.findUnique({
@@ -62,13 +63,7 @@ const updateBookingStatus = async (
 
 const updateProfile = async (
   userId: string,
-  payload: {
-    bio?: string;
-    skills?: string[];
-    experience?: number;
-    hourlyRate?: number;
-    location?: string;
-  }
+  payload: TUpdateProfilePayload
 ) => {
   const result = await prisma.technicianProfile.update({
     where: { userId },

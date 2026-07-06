@@ -1,18 +1,12 @@
 import { Response } from "express";
-
-type TResponseMeta = {
-  page?: number;
-  limit?: number;
-  total?: number;
-  totalPage?: number;
-};
+import type { PaginationMeta } from "../interfaces/payloads";
 
 type TSendResponse<T> = {
   statusCode: number;
   success?: boolean;
   message: string;
   data: T;
-  meta?: TResponseMeta;
+  meta?: PaginationMeta;
 };
 
 const sendResponse = <T>(res: Response, payload: TSendResponse<T>) => {

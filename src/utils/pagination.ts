@@ -1,23 +1,11 @@
-type PaginationQuery = {
-  page?: string;
-  limit?: string;
-  sortBy?: string;
-  sortOrder?: string;
-};
-
-type PaginationMeta = {
-  page: number;
-  limit: number;
-  total: number;
-  totalPage: number;
-};
+import type { PaginationQuery, PaginationMeta, SortOrder } from "../interfaces/payloads";
 
 const parsePagination = (query: PaginationQuery) => {
   const page = Math.max(1, parseInt(query.page || "1", 10));
   const limit = Math.min(100, Math.max(1, parseInt(query.limit || "10", 10)));
   const skip = (page - 1) * limit;
   const sortBy = query.sortBy || "createdAt";
-  const sortOrder = (query.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
+  const sortOrder: SortOrder = query.sortOrder === "asc" ? "asc" : "desc";
 
   return { page, limit, skip, take: limit, sortBy, sortOrder };
 };

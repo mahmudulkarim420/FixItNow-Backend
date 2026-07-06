@@ -3,6 +3,7 @@ import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
 import type Stripe from "stripe";
 import { Prisma } from "../../../generated/prisma/client";
+import type { TConfirmPaymentPayload } from "./payment.validation";
 
 const createPaymentIntent = async (bookingId: string, userId: string) => {
   const booking = await prisma.booking.findUnique({
@@ -31,7 +32,7 @@ const createPaymentIntent = async (bookingId: string, userId: string) => {
 };
 
 const confirmPayment = async (
-  payload: { bookingId: string; transactionId: string; amount: number },
+  payload: TConfirmPaymentPayload,
   userId: string
 ) => {
   const booking = await prisma.booking.findUnique({

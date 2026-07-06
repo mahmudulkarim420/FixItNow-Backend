@@ -12,6 +12,8 @@ const createBookingValidationSchema = z.object({
   }),
 });
 
+export type TCreateBookingPayload = z.infer<typeof createBookingValidationSchema>["body"];
+
 export const BookingValidations = {
   createBookingValidationSchema,
 };
