@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
 import { Prisma } from "../../../generated/prisma/client";
+import { assertTransition } from "./bookingStatus";
 
 const createBooking = async (
   customerId: string,
@@ -87,8 +88,6 @@ const getBookingById = async (bookingId: string, userId: string, role: string) =
   return result;
 };
 
-const CANCELLABLE_STATUSES = ["REQUESTED", "ACCEPTED", "PAID"];
-
 const cancelBooking = async (bookingId: string, userId: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -103,12 +102,7 @@ const cancelBooking = async (bookingId: string, userId: string) => {
     throw new AppError(403, "You are not authorized to cancel this booking!");
   }
 
-  if (!CANCELLABLE_STATUSES.includes(booking.status)) {
-    throw new AppError(
-      400,
-      "Booking cannot be cancelled once it is in progress or completed!"
-    );
-  }
+  assertTransition(booking.status, "CANCELLED");
 
   const completedPayment =
     booking.payment && booking.payment.status === "COMPLETED"
