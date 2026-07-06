@@ -36,4 +36,14 @@ router.put(
   TechnicianControllers.updateAvailability
 );
 
+const listingRouter = express.Router();
+
+listingRouter.get("/", TechnicianControllers.getAllTechnicians);
+listingRouter.get(
+  "/:id",
+  validateParams(idParamValidationSchema),
+  TechnicianControllers.getTechnicianById
+);
+
 export const TechnicianRoutes = router;
+export const TechnicianListingRoutes = listingRouter;

@@ -10,12 +10,6 @@ const router = express.Router();
 
 router.get("/", ServiceControllers.getAllServices);
 router.get("/categories", ServiceControllers.getAllCategories);
-router.get("/technicians", ServiceControllers.getAllTechnicians);
-router.get(
-  "/technicians/:id",
-  validateParams(idParamValidationSchema),
-  ServiceControllers.getTechnicianById
-);
 router.get(
   "/:id",
   validateParams(idParamValidationSchema),

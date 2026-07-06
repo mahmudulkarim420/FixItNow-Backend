@@ -50,9 +50,32 @@ const updateAvailability = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllTechnicians = catchAsync(async (req: Request, res: Response) => {
+  const { data, meta } = await TechnicianServices.getAllTechnicians(req.query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Technicians retrieved successfully!",
+    meta,
+    data,
+  });
+});
+
+const getTechnicianById = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.getTechnicianById(req.params.id as string);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Technician retrieved successfully!",
+    data: result,
+  });
+});
+
 export const TechnicianControllers = {
   getTechnicianBookings,
   updateBookingStatus,
   updateProfile,
   updateAvailability,
+  getAllTechnicians,
+  getTechnicianById,
 };

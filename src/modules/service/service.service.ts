@@ -190,72 +190,6 @@ const deleteService = async (serviceId: string, userId: string) => {
   return result;
 };
 
-const getAllTechnicians = async (query: {
-  location?: string;
-  minRating?: string;
-  minHourlyRate?: string;
-  maxHourlyRate?: string;
-  page?: string;
-  limit?: string;
-  sortBy?: string;
-  sortOrder?: string;
-}) => {
-  const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
-  const where: Prisma.TechnicianProfileWhereInput = {
-    user: { status: "ACTIVE" },
-  };
-
-  if (query.location) {
-    where.location = { contains: query.location, mode: "insensitive" };
-  }
-
-  if (query.minRating) {
-    where.averageRating = { gte: parseFloat(query.minRating) };
-  }
-
-  if (query.minHourlyRate || query.maxHourlyRate) {
-    where.hourlyRate = {};
-    if (query.minHourlyRate) where.hourlyRate.gte = parseFloat(query.minHourlyRate);
-    if (query.maxHourlyRate) where.hourlyRate.lte = parseFloat(query.maxHourlyRate);
-  }
-
-  const [data, total] = await Promise.all([
-    prisma.technicianProfile.findMany({
-      where,
-      skip,
-      take,
-      orderBy: { [sortBy]: sortOrder } as Prisma.TechnicianProfileOrderByWithRelationInput,
-      include: {
-        user: { select: { name: true, email: true, status: true } },
-      },
-    }),
-    prisma.technicianProfile.count({ where }),
-  ]);
-
-  return { data, meta: buildMeta(page, limit, total) };
-};
-
-const getTechnicianById = async (id: string) => {
-  const result = await prisma.technicianProfile.findUnique({
-    where: { id },
-    include: {
-      user: { select: { name: true, email: true } },
-      services: true,
-      reviews: {
-        include: {
-          customer: { select: { name: true } },
-        },
-      },
-    },
-  });
-
-  if (!result) {
-    throw new AppError(404, "Technician not found!");
-  }
-
-  return result;
-};
-
 const getAllCategories = async (query: { sortBy?: string }) => {
   let orderBy: Prisma.CategoryOrderByWithRelationInput = { createdAt: "desc" };
 
@@ -281,7 +215,5 @@ export const ServiceServices = {
   createService,
   updateService,
   deleteService,
-  getAllTechnicians,
-  getTechnicianById,
   getAllCategories,
 };
