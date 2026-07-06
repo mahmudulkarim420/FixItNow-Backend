@@ -10,6 +10,8 @@ import { AdminRoutes } from "./modules/admin/admin.route";
 import AppError from "./utils/AppError";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import helmet from "helmet";
 
 const app = express();
 
@@ -19,6 +21,11 @@ app.use(
   PaymentControllers.stripeWebhook
 );
 
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
+app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 app.get("/api/health", (_req, res) => {
