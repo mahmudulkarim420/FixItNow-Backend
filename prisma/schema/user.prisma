@@ -11,4 +11,6 @@ model User {
   technicianProfile TechnicianProfile?
   bookings          Booking[]
   reviews           Review[]
+
+  @@index([status])
 }

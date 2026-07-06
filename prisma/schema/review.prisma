@@ -14,4 +14,7 @@ model Review {
   comment String?
 
   createdAt DateTime @default(now())
+
+  @@index([customerId])
+  @@index([technicianProfileId])
 }
