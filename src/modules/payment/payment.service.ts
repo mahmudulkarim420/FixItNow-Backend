@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import config from "../../config";
+import { Prisma } from "../../../generated/prisma/client";
 
 const stripe = new Stripe(config.stripe.secretKey as string);
 
@@ -83,7 +84,7 @@ const confirmPayment = async (
 };
 
 const getUserPaymentHistory = async (userId: string, role: string) => {
-  let where: any = {};
+  const where: Prisma.PaymentWhereInput = {};
 
   if (role === "CUSTOMER") {
     where.booking = { customerId: userId };

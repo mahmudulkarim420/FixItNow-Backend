@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { Prisma, BookingStatus } from "../../../generated/prisma/client";
 
 const getTechnicianBookings = async (userId: string) => {
   const technicianProfile = await prisma.technicianProfile.findUnique({
@@ -49,7 +50,7 @@ const updateBookingStatus = async (
 
   const result = await prisma.booking.update({
     where: { id: bookingId },
-    data: { status: status as any },
+    data: { status: status as BookingStatus },
     include: {
       service: true,
       customer: { select: { name: true, email: true } },
@@ -77,7 +78,7 @@ const updateProfile = async (
   return result;
 };
 
-const updateAvailability = async (userId: string, availabilityData: any) => {
+const updateAvailability = async (userId: string, availabilityData: Prisma.InputJsonValue) => {
   const result = await prisma.technicianProfile.update({
     where: { userId },
     data: { availability: availabilityData },

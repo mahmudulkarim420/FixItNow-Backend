@@ -1,61 +1,49 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthServices } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
-import config from "../../config";
+import catchAsync from "../../utils/catchAsync";
 
-const registerUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AuthServices.registerUser(req.body);
+const registerUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.registerUser(req.body);
 
-    sendResponse(res, {
-      statusCode: 201,
-      message: "User registered successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 201,
+    message: "User registered successfully!",
+    data: result,
+  });
+});
 
-const loginUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AuthServices.loginUser(req.body);
+const loginUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.loginUser(req.body);
 
-    res.cookie("accessToken", result.accessToken, {
-      httpOnly: true,
-      secure: config.nodeEnv === "production",
-      sameSite: "strict",
-    });
+  res.cookie("accessToken", result.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
 
-    res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
-      secure: config.nodeEnv === "production",
-      sameSite: "strict",
-    });
+  res.cookie("refreshToken", result.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "User logged in successfully!",
-      data: result.user,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "User logged in successfully!",
+    data: result.user,
+  });
+});
 
-const getMe = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AuthServices.getMe(req.user!.id as string);
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.getMe(req.user!.id as string);
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "User profile retrieved successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "User profile retrieved successfully!",
+    data: result,
+  });
+});
 
 export const AuthControllers = {
   registerUser,

@@ -1,20 +1,17 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { ReviewServices } from "./review.service";
 import sendResponse from "../../utils/sendResponse";
+import catchAsync from "../../utils/catchAsync";
 
-const createReview = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await ReviewServices.createReview(req.user!.id as string, req.body);
+const createReview = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewServices.createReview(req.user!.id as string, req.body);
 
-    sendResponse(res, {
-      statusCode: 201,
-      message: "Review created successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 201,
+    message: "Review created successfully!",
+    data: result,
+  });
+});
 
 export const ReviewControllers = {
   createReview,

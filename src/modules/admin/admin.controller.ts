@@ -1,79 +1,60 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { AdminServices } from "./admin.service";
 import sendResponse from "../../utils/sendResponse";
+import catchAsync from "../../utils/catchAsync";
 
-const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AdminServices.getAllUsers();
+const getAllUsers = catchAsync(async (_req: Request, res: Response) => {
+  const result = await AdminServices.getAllUsers();
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Users retrieved successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Users retrieved successfully!",
+    data: result,
+  });
+});
 
-const toggleUserStatus = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AdminServices.toggleUserStatus(
-      req.params.id as string,
-      req.body.status
-    );
+const toggleUserStatus = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminServices.toggleUserStatus(
+    req.params.id as string,
+    req.body.status
+  );
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "User status updated successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "User status updated successfully!",
+    data: result,
+  });
+});
 
-const getAllBookings = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AdminServices.getAllBookings();
+const getAllBookings = catchAsync(async (_req: Request, res: Response) => {
+  const result = await AdminServices.getAllBookings();
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Bookings retrieved successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Bookings retrieved successfully!",
+    data: result,
+  });
+});
 
-const getAllCategoriesAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AdminServices.getAllCategoriesAdmin();
+const getAllCategoriesAdmin = catchAsync(async (_req: Request, res: Response) => {
+  const result = await AdminServices.getAllCategoriesAdmin();
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Categories retrieved successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Categories retrieved successfully!",
+    data: result,
+  });
+});
 
-const createCategory = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await AdminServices.createCategory(req.body);
+const createCategory = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminServices.createCategory(req.body);
 
-    sendResponse(res, {
-      statusCode: 201,
-      message: "Category created successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 201,
+    message: "Category created successfully!",
+    data: result,
+  });
+});
 
 export const AdminControllers = {
   getAllUsers,

@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { Prisma } from "../../../generated/prisma/client";
 
 const getAllServices = async (query: {
   search?: string;
@@ -7,7 +8,7 @@ const getAllServices = async (query: {
   minPrice?: string;
   maxPrice?: string;
 }) => {
-  const where: any = {};
+  const where: Prisma.ServiceWhereInput = {};
 
   if (query.search) {
     where.OR = [
@@ -48,7 +49,7 @@ const getAllTechnicians = async (query: {
   minHourlyRate?: string;
   maxHourlyRate?: string;
 }) => {
-  const where: any = {
+  const where: Prisma.TechnicianProfileWhereInput = {
     user: { status: "ACTIVE" },
   };
 
@@ -98,7 +99,7 @@ const getTechnicianById = async (id: string) => {
 };
 
 const getAllCategories = async (query: { sortBy?: string }) => {
-  let orderBy: any = { createdAt: "desc" };
+  let orderBy: Prisma.CategoryOrderByWithRelationInput = { createdAt: "desc" };
 
   if (query.sortBy === "name") {
     orderBy = { name: "asc" };

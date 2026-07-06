@@ -1,69 +1,54 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { TechnicianServices } from "./technician.service";
 import sendResponse from "../../utils/sendResponse";
+import catchAsync from "../../utils/catchAsync";
 
-const getTechnicianBookings = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await TechnicianServices.getTechnicianBookings(req.user!.id as string);
+const getTechnicianBookings = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.getTechnicianBookings(req.user!.id as string);
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Technician bookings retrieved successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Technician bookings retrieved successfully!",
+    data: result,
+  });
+});
 
-const updateBookingStatus = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await TechnicianServices.updateBookingStatus(
-      req.params.id as string,
-      req.user!.id as string,
-      req.body.status,
-    );
+const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.updateBookingStatus(
+    req.params.id as string,
+    req.user!.id as string,
+    req.body.status
+  );
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Booking status updated successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Booking status updated successfully!",
+    data: result,
+  });
+});
 
-const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await TechnicianServices.updateProfile(req.user!.id as string, req.body);
+const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.updateProfile(req.user!.id as string, req.body);
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Profile updated successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Profile updated successfully!",
+    data: result,
+  });
+});
 
-const updateAvailability = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await TechnicianServices.updateAvailability(
-      req.user!.id as string,
-      req.body.availability,
-    );
+const updateAvailability = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.updateAvailability(
+    req.user!.id as string,
+    req.body.availability
+  );
 
-    sendResponse(res, {
-      statusCode: 200,
-      message: "Availability updated successfully!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Availability updated successfully!",
+    data: result,
+  });
+});
 
 export const TechnicianControllers = {
   getTechnicianBookings,

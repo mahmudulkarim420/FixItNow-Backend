@@ -3,12 +3,13 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import config from "../../config";
+import { Prisma, Role } from "../../../generated/prisma/client";
 
 const registerUser = async (payload: {
   name: string;
   email: string;
   password: string;
-  role: "CUSTOMER" | "TECHNICIAN";
+  role: Role;
 }) => {
   const isUserExists = await prisma.user.findUnique({
     where: { email: payload.email },
@@ -94,6 +95,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
 
   return { accessToken, refreshToken, user: userWithoutPassword };
 };
+
 const getMe = async (userId: string) => {
   const result = await prisma.user.findUnique({
     where: { id: userId },

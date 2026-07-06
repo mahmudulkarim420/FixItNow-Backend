@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { Prisma } from "../../../generated/prisma/client";
 
 const createBooking = async (
   customerId: string,
@@ -9,7 +10,7 @@ const createBooking = async (
     scheduledDate: string;
     timeSlot: string;
     contactNumber: string;
-  }
+  },
 ) => {
   const service = await prisma.service.findUnique({
     where: { id: payload.serviceId },
@@ -41,7 +42,7 @@ const createBooking = async (
 };
 
 const getAllBookings = async (userId: string, role: string) => {
-  let where: any = {};
+  const where: Prisma.BookingWhereInput = {};
 
   if (role === "CUSTOMER") {
     where.customerId = userId;
@@ -76,9 +77,7 @@ const getBookingById = async (bookingId: string, userId: string, role: string) =
   }
 
   const isOwner =
-    role === "ADMIN" ||
-    result.customerId === userId ||
-    result.technicianProfile.userId === userId;
+    role === "ADMIN" || result.customerId === userId || result.technicianProfile.userId === userId;
 
   if (!isOwner) {
     throw new AppError(403, "You are not authorized to view this booking!");

@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { Prisma, Status } from "../../../generated/prisma/client";
 
 const getAllUsers = async () => {
   const result = await prisma.user.findMany({
@@ -20,7 +21,7 @@ const toggleUserStatus = async (userId: string, status: string) => {
 
   const result = await prisma.user.update({
     where: { id: userId },
-    data: { status: status as any },
+    data: { status: status as Status },
     omit: { password: true },
   });
 
