@@ -43,6 +43,151 @@ const getAllServices = async (query: {
   return result;
 };
 
+const getServiceById = async (id: string) => {
+  const result = await prisma.service.findUnique({
+    where: { id },
+    include: {
+      category: true,
+      technicianProfile: {
+        select: {
+          id: true,
+          user: { select: { name: true, email: true } },
+        },
+      },
+    },
+  });
+
+  if (!result) {
+    throw new AppError(404, "Service not found!");
+  }
+
+  return result;
+};
+
+const createService = async (
+  userId: string,
+  payload: {
+    title: string;
+    description: string;
+    price: number;
+    categoryId: string;
+  }
+) => {
+  const technicianProfile = await prisma.technicianProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!technicianProfile) {
+    throw new AppError(404, "Technician profile not found!");
+  }
+
+  const category = await prisma.category.findUnique({
+    where: { id: payload.categoryId },
+  });
+
+  if (!category) {
+    throw new AppError(404, "Category not found!");
+  }
+
+  const result = await prisma.service.create({
+    data: {
+      title: payload.title,
+      description: payload.description,
+      price: payload.price,
+      categoryId: payload.categoryId,
+      technicianProfileId: technicianProfile.id,
+    },
+    include: {
+      category: true,
+      technicianProfile: {
+        select: {
+          id: true,
+          user: { select: { name: true, email: true } },
+        },
+      },
+    },
+  });
+
+  return result;
+};
+
+const updateService = async (
+  serviceId: string,
+  userId: string,
+  payload: {
+    title?: string;
+    description?: string;
+    price?: number;
+    categoryId?: string;
+  }
+) => {
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+  });
+
+  if (!service) {
+    throw new AppError(404, "Service not found!");
+  }
+
+  const technicianProfile = await prisma.technicianProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!technicianProfile || service.technicianProfileId !== technicianProfile.id) {
+    throw new AppError(403, "You are not authorized to update this service!");
+  }
+
+  if (payload.categoryId) {
+    const category = await prisma.category.findUnique({
+      where: { id: payload.categoryId },
+    });
+
+    if (!category) {
+      throw new AppError(404, "Category not found!");
+    }
+  }
+
+  const result = await prisma.service.update({
+    where: { id: serviceId },
+    data: payload,
+    include: {
+      category: true,
+      technicianProfile: {
+        select: {
+          id: true,
+          user: { select: { name: true, email: true } },
+        },
+      },
+    },
+  });
+
+  return result;
+};
+
+const deleteService = async (serviceId: string, userId: string) => {
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+  });
+
+  if (!service) {
+    throw new AppError(404, "Service not found!");
+  }
+
+  const technicianProfile = await prisma.technicianProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!technicianProfile || service.technicianProfileId !== technicianProfile.id) {
+    throw new AppError(403, "You are not authorized to delete this service!");
+  }
+
+  const result = await prisma.service.delete({
+    where: { id: serviceId },
+  });
+
+  return result;
+};
+
 const getAllTechnicians = async (query: {
   location?: string;
   minRating?: string;
@@ -119,6 +264,10 @@ const getAllCategories = async (query: { sortBy?: string }) => {
 
 export const ServiceServices = {
   getAllServices,
+  getServiceById,
+  createService,
+  updateService,
+  deleteService,
   getAllTechnicians,
   getTechnicianById,
   getAllCategories,

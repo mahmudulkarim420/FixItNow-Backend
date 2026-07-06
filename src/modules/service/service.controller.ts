@@ -13,6 +13,53 @@ const getAllServices = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getServiceById = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceServices.getServiceById(req.params.id as string);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Service retrieved successfully!",
+    data: result,
+  });
+});
+
+const createService = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceServices.createService(req.user!.id as string, req.body);
+
+  sendResponse(res, {
+    statusCode: 201,
+    message: "Service created successfully!",
+    data: result,
+  });
+});
+
+const updateService = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceServices.updateService(
+    req.params.id as string,
+    req.user!.id as string,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Service updated successfully!",
+    data: result,
+  });
+});
+
+const deleteService = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceServices.deleteService(
+    req.params.id as string,
+    req.user!.id as string
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Service deleted successfully!",
+    data: result,
+  });
+});
+
 const getAllTechnicians = catchAsync(async (req: Request, res: Response) => {
   const result = await ServiceServices.getAllTechnicians(req.query);
 
@@ -45,6 +92,10 @@ const getAllCategories = catchAsync(async (req: Request, res: Response) => {
 
 export const ServiceControllers = {
   getAllServices,
+  getServiceById,
+  createService,
+  updateService,
+  deleteService,
   getAllTechnicians,
   getTechnicianById,
   getAllCategories,
