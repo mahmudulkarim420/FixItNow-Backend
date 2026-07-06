@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { TechnicianServices } from "./technician.service";
+import sendResponse from "../../utils/sendResponse";
 
 const getTechnicianBookings = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await TechnicianServices.getTechnicianBookings(req.user!.id as string);
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Technician bookings retrieved successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -23,12 +24,12 @@ const updateBookingStatus = async (req: Request, res: Response, next: NextFuncti
       req.body.status,
     );
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Booking status updated successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -37,12 +38,12 @@ const updateProfile = async (req: Request, res: Response, next: NextFunction) =>
   try {
     const result = await TechnicianServices.updateProfile(req.user!.id as string, req.body);
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Profile updated successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -54,12 +55,12 @@ const updateAvailability = async (req: Request, res: Response, next: NextFunctio
       req.body.availability,
     );
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Availability updated successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };

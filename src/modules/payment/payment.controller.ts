@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { PaymentServices } from "./payment.service";
+import sendResponse from "../../utils/sendResponse";
 
 const createPaymentIntent = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -8,12 +9,12 @@ const createPaymentIntent = async (req: Request, res: Response, next: NextFuncti
       req.user!.id as string
     );
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Payment intent created successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -22,12 +23,12 @@ const confirmPayment = async (req: Request, res: Response, next: NextFunction) =
   try {
     const result = await PaymentServices.confirmPayment(req.body, req.user!.id as string);
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Payment confirmed successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -39,12 +40,12 @@ const getUserPaymentHistory = async (req: Request, res: Response, next: NextFunc
       req.user!.role as string
     );
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Payment history retrieved successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -57,12 +58,12 @@ const getPaymentById = async (req: Request, res: Response, next: NextFunction) =
       req.user!.role as string
     );
 
-    res.status(200).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 200,
       message: "Payment details retrieved successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };

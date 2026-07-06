@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import { Prisma } from "../../generated/prisma/client";
 import AppError from "../utils/AppError";
+import config from "../config";
 
 type TErrorSource = { path: string; message: string };
 
@@ -68,7 +69,7 @@ const globalErrorHandler = (
   }
 
   let stack: string | undefined;
-  if (process.env.NODE_ENV === "development" && err instanceof Error) {
+  if (config.nodeEnv === "development" && err instanceof Error) {
     stack = err.stack;
   }
 

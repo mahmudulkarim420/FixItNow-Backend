@@ -1,19 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { ReviewServices } from "./review.service";
+import sendResponse from "../../utils/sendResponse";
 
 const createReview = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await ReviewServices.createReview(
-      req.user!.id as string,
-      req.body
-    );
+    const result = await ReviewServices.createReview(req.user!.id as string, req.body);
 
-    res.status(201).json({
-      success: true,
+    sendResponse(res, {
+      statusCode: 201,
       message: "Review created successfully!",
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
