@@ -16,6 +16,10 @@ router.patch(
 );
 
 router.get("/bookings", auth("ADMIN"), AdminControllers.getAllBookings);
+router.get("/bookings/:id", auth("ADMIN"), AdminControllers.getBookingById);
+
+router.get("/payments", auth("ADMIN"), AdminControllers.getAllPayments);
+router.get("/payments/:id", auth("ADMIN"), AdminControllers.getPaymentById);
 
 router.get("/categories", auth("ADMIN"), AdminControllers.getAllCategoriesAdmin);
 
@@ -24,6 +28,19 @@ router.post(
   auth("ADMIN"),
   validateRequest(AdminValidations.createCategoryValidationSchema),
   AdminControllers.createCategory
+);
+
+router.patch(
+  "/categories/:id",
+  auth("ADMIN"),
+  validateRequest(AdminValidations.updateCategoryValidationSchema),
+  AdminControllers.updateCategory
+);
+
+router.delete(
+  "/categories/:id",
+  auth("ADMIN"),
+  AdminControllers.deleteCategory
 );
 
 export const AdminRoutes = router;
