@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma } from "../../../generated/prisma/client";
 
 const getAllServices = async (query: {
@@ -7,7 +8,12 @@ const getAllServices = async (query: {
   categoryId?: string;
   minPrice?: string;
   maxPrice?: string;
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }) => {
+  const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
   const where: Prisma.ServiceWhereInput = {};
 
   if (query.search) {
@@ -27,20 +33,26 @@ const getAllServices = async (query: {
     if (query.maxPrice) where.price.lte = parseFloat(query.maxPrice);
   }
 
-  const result = await prisma.service.findMany({
-    where,
-    include: {
-      category: true,
-      technicianProfile: {
-        select: {
-          id: true,
-          user: { select: { name: true, email: true } },
+  const [data, total] = await Promise.all([
+    prisma.service.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { [sortBy]: sortOrder } as Prisma.ServiceOrderByWithRelationInput,
+      include: {
+        category: true,
+        technicianProfile: {
+          select: {
+            id: true,
+            user: { select: { name: true, email: true } },
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.service.count({ where }),
+  ]);
 
-  return result;
+  return { data, meta: buildMeta(page, limit, total) };
 };
 
 const getServiceById = async (id: string) => {
@@ -193,7 +205,12 @@ const getAllTechnicians = async (query: {
   minRating?: string;
   minHourlyRate?: string;
   maxHourlyRate?: string;
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }) => {
+  const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
   const where: Prisma.TechnicianProfileWhereInput = {
     user: { status: "ACTIVE" },
   };
@@ -212,14 +229,20 @@ const getAllTechnicians = async (query: {
     if (query.maxHourlyRate) where.hourlyRate.lte = parseFloat(query.maxHourlyRate);
   }
 
-  const result = await prisma.technicianProfile.findMany({
-    where,
-    include: {
-      user: { select: { name: true, email: true, status: true } },
-    },
-  });
+  const [data, total] = await Promise.all([
+    prisma.technicianProfile.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { [sortBy]: sortOrder } as Prisma.TechnicianProfileOrderByWithRelationInput,
+      include: {
+        user: { select: { name: true, email: true, status: true } },
+      },
+    }),
+    prisma.technicianProfile.count({ where }),
+  ]);
 
-  return result;
+  return { data, meta: buildMeta(page, limit, total) };
 };
 
 const getTechnicianById = async (id: string) => {

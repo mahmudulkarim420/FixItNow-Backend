@@ -3,13 +3,14 @@ import { AdminServices } from "./admin.service";
 import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 
-const getAllUsers = catchAsync(async (_req: Request, res: Response) => {
-  const result = await AdminServices.getAllUsers();
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const { data, meta } = await AdminServices.getAllUsers(req.query);
 
   sendResponse(res, {
     statusCode: 200,
     message: "Users retrieved successfully!",
-    data: result,
+    meta,
+    data,
   });
 });
 
@@ -26,13 +27,14 @@ const toggleUserStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllBookings = catchAsync(async (_req: Request, res: Response) => {
-  const result = await AdminServices.getAllBookings();
+const getAllBookings = catchAsync(async (req: Request, res: Response) => {
+  const { data, meta } = await AdminServices.getAllBookings(req.query);
 
   sendResponse(res, {
     statusCode: 200,
     message: "Bookings retrieved successfully!",
-    data: result,
+    meta,
+    data,
   });
 });
 

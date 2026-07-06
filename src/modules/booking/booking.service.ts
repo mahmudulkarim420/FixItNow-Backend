@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
+import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma } from "../../../generated/prisma/client";
 import { assertTransition } from "./bookingStatus";
 
@@ -43,7 +44,17 @@ const createBooking = async (
   return result;
 };
 
-const getAllBookings = async (userId: string, role: string) => {
+const getAllBookings = async (
+  userId: string,
+  role: string,
+  query: {
+    page?: string;
+    limit?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }
+) => {
+  const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
   const where: Prisma.BookingWhereInput = {};
 
   if (role === "CUSTOMER") {
@@ -52,16 +63,22 @@ const getAllBookings = async (userId: string, role: string) => {
     where.technicianProfile = { userId };
   }
 
-  const result = await prisma.booking.findMany({
-    where,
-    include: {
-      service: true,
-      customer: { select: { name: true, email: true } },
-      technicianProfile: { include: { user: { select: { name: true } } } },
-    },
-  });
+  const [data, total] = await Promise.all([
+    prisma.booking.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { [sortBy]: sortOrder } as Prisma.BookingOrderByWithRelationInput,
+      include: {
+        service: true,
+        customer: { select: { name: true, email: true } },
+        technicianProfile: { include: { user: { select: { name: true } } } },
+      },
+    }),
+    prisma.booking.count({ where }),
+  ]);
 
-  return result;
+  return { data, meta: buildMeta(page, limit, total) };
 };
 
 const getBookingById = async (bookingId: string, userId: string, role: string) => {

@@ -1,15 +1,28 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma, Status } from "../../../generated/prisma/client";
 
-const getAllUsers = async () => {
-  const result = await prisma.user.findMany({
-    omit: { password: true },
-    include: { technicianProfile: true },
-    orderBy: { createdAt: "desc" },
-  });
+const getAllUsers = async (query: {
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}) => {
+  const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
 
-  return result;
+  const [data, total] = await Promise.all([
+    prisma.user.findMany({
+      skip,
+      take,
+      orderBy: { [sortBy]: sortOrder } as Prisma.UserOrderByWithRelationInput,
+      omit: { password: true },
+      include: { technicianProfile: true },
+    }),
+    prisma.user.count(),
+  ]);
+
+  return { data, meta: buildMeta(page, limit, total) };
 };
 
 const toggleUserStatus = async (userId: string, status: string) => {
@@ -28,17 +41,29 @@ const toggleUserStatus = async (userId: string, status: string) => {
   return result;
 };
 
-const getAllBookings = async () => {
-  const result = await prisma.booking.findMany({
-    include: {
-      service: true,
-      customer: { select: { name: true, email: true } },
-      technicianProfile: { include: { user: { select: { name: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+const getAllBookings = async (query: {
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}) => {
+  const { page, limit, skip, take, sortBy, sortOrder } = parsePagination(query);
 
-  return result;
+  const [data, total] = await Promise.all([
+    prisma.booking.findMany({
+      skip,
+      take,
+      orderBy: { [sortBy]: sortOrder } as Prisma.BookingOrderByWithRelationInput,
+      include: {
+        service: true,
+        customer: { select: { name: true, email: true } },
+        technicianProfile: { include: { user: { select: { name: true } } } },
+      },
+    }),
+    prisma.booking.count(),
+  ]);
+
+  return { data, meta: buildMeta(page, limit, total) };
 };
 
 const getBookingById = async (bookingId: string) => {

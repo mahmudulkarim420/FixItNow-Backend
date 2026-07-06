@@ -4,12 +4,13 @@ import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 
 const getAllServices = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceServices.getAllServices(req.query);
+  const { data, meta } = await ServiceServices.getAllServices(req.query);
 
   sendResponse(res, {
     statusCode: 200,
     message: "Services retrieved successfully!",
-    data: result,
+    meta,
+    data,
   });
 });
 
@@ -61,12 +62,13 @@ const deleteService = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllTechnicians = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceServices.getAllTechnicians(req.query);
+  const { data, meta } = await ServiceServices.getAllTechnicians(req.query);
 
   sendResponse(res, {
     statusCode: 200,
     message: "Technicians retrieved successfully!",
-    data: result,
+    meta,
+    data,
   });
 });
 
