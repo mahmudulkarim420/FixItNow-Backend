@@ -1,10 +1,7 @@
-import Stripe from "stripe";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
-import config from "../../config";
+import stripe from "../../lib/stripe";
 import { Prisma } from "../../../generated/prisma/client";
-
-const stripe = new Stripe(config.stripe.secretKey as string);
 
 const createPaymentIntent = async (bookingId: string, userId: string) => {
   const booking = await prisma.booking.findUnique({

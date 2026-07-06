@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import stripe from "../../lib/stripe";
 import { Prisma } from "../../../generated/prisma/client";
 
 const createBooking = async (
@@ -86,8 +87,66 @@ const getBookingById = async (bookingId: string, userId: string, role: string) =
   return result;
 };
 
+const CANCELLABLE_STATUSES = ["REQUESTED", "ACCEPTED", "PAID"];
+
+const cancelBooking = async (bookingId: string, userId: string) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { payment: true },
+  });
+
+  if (!booking) {
+    throw new AppError(404, "Booking not found!");
+  }
+
+  if (booking.customerId !== userId) {
+    throw new AppError(403, "You are not authorized to cancel this booking!");
+  }
+
+  if (!CANCELLABLE_STATUSES.includes(booking.status)) {
+    throw new AppError(
+      400,
+      "Booking cannot be cancelled once it is in progress or completed!"
+    );
+  }
+
+  const completedPayment =
+    booking.payment && booking.payment.status === "COMPLETED"
+      ? booking.payment
+      : null;
+
+  if (completedPayment) {
+    await stripe.refunds.create({
+      payment_intent: completedPayment.transactionId,
+    });
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    if (completedPayment) {
+      await tx.payment.update({
+        where: { bookingId },
+        data: { status: "REFUNDED" },
+      });
+    }
+
+    return tx.booking.update({
+      where: { id: bookingId },
+      data: { status: "CANCELLED" },
+      include: {
+        service: true,
+        customer: { select: { name: true, email: true } },
+        technicianProfile: { include: { user: { select: { name: true } } } },
+        payment: true,
+      },
+    });
+  });
+
+  return result;
+};
+
 export const BookingServices = {
   createBooking,
   getAllBookings,
   getBookingById,
+  cancelBooking,
 };
