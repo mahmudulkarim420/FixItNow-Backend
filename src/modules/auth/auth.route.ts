@@ -22,4 +22,11 @@ router.get(
   auth('CUSTOMER', 'TECHNICIAN', 'ADMIN'),
   AuthControllers.getMe
 );
+
+router.post(
+  '/logout',
+  auth('CUSTOMER', 'TECHNICIAN', 'ADMIN'),
+  AuthControllers.logout
+);
+
 export const AuthRoutes = router;
