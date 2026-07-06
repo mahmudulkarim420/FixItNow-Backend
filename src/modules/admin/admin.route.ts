@@ -34,28 +34,4 @@ router.get(
   AdminControllers.getPaymentById
 );
 
-router.get("/categories", auth("ADMIN"), AdminControllers.getAllCategoriesAdmin);
-
-router.post(
-  "/categories",
-  auth("ADMIN"),
-  validateRequest(AdminValidations.createCategoryValidationSchema),
-  AdminControllers.createCategory
-);
-
-router.patch(
-  "/categories/:id",
-  auth("ADMIN"),
-  validateParams(idParamValidationSchema),
-  validateRequest(AdminValidations.updateCategoryValidationSchema),
-  AdminControllers.updateCategory
-);
-
-router.delete(
-  "/categories/:id",
-  auth("ADMIN"),
-  validateParams(idParamValidationSchema),
-  AdminControllers.deleteCategory
-);
-
 export const AdminRoutes = router;

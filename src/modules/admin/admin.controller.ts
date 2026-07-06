@@ -48,49 +48,6 @@ const getBookingById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllCategoriesAdmin = catchAsync(async (_req: Request, res: Response) => {
-  const result = await AdminServices.getAllCategoriesAdmin();
-
-  sendResponse(res, {
-    statusCode: 200,
-    message: "Categories retrieved successfully!",
-    data: result,
-  });
-});
-
-const createCategory = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminServices.createCategory(req.body);
-
-  sendResponse(res, {
-    statusCode: 201,
-    message: "Category created successfully!",
-    data: result,
-  });
-});
-
-const updateCategory = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminServices.updateCategory(
-    req.params.id as string,
-    req.body
-  );
-
-  sendResponse(res, {
-    statusCode: 200,
-    message: "Category updated successfully!",
-    data: result,
-  });
-});
-
-const deleteCategory = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminServices.deleteCategory(req.params.id as string);
-
-  sendResponse(res, {
-    statusCode: 200,
-    message: "Category deleted successfully!",
-    data: result,
-  });
-});
-
 const getAllPayments = catchAsync(async (_req: Request, res: Response) => {
   const result = await AdminServices.getAllPayments();
 
@@ -116,10 +73,6 @@ export const AdminControllers = {
   toggleUserStatus,
   getAllBookings,
   getBookingById,
-  getAllCategoriesAdmin,
-  createCategory,
-  updateCategory,
-  deleteCategory,
   getAllPayments,
   getPaymentById,
 };
