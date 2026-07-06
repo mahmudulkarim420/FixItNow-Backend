@@ -3,6 +3,7 @@ import { AuthRoutes } from "./modules/auth/auth.route";
 import { ServiceRoutes } from "./modules/service/service.route";
 import { BookingRoutes } from "./modules/booking/booking.route";
 import { PaymentRoutes } from "./modules/payment/payment.route";
+import { PaymentControllers } from "./modules/payment/payment.controller";
 import { TechnicianRoutes } from "./modules/technician/technician.route";
 import { ReviewRoutes } from "./modules/review/review.route";
 import { AdminRoutes } from "./modules/admin/admin.route";
@@ -11,6 +12,12 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 import cookieParser from "cookie-parser";
 
 const app = express();
+
+app.use(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  PaymentControllers.stripeWebhook
+);
 
 app.use(express.json());
 app.use(cookieParser());

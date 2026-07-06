@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
+import type Stripe from "stripe";
 import { Prisma } from "../../../generated/prisma/client";
 
 const createPaymentIntent = async (bookingId: string, userId: string) => {
@@ -127,9 +128,108 @@ const getPaymentById = async (paymentId: string, userId: string, role: string) =
   return result;
 };
 
+const handlePaymentIntentSucceeded = async (paymentIntent: Stripe.PaymentIntent) => {
+  const bookingId = paymentIntent.metadata.bookingId;
+  if (!bookingId) return;
+
+  const existingPayment = await prisma.payment.findUnique({
+    where: { bookingId },
+  });
+
+  if (existingPayment) return;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.create({
+      data: {
+        bookingId,
+        amount: paymentIntent.amount / 100,
+        transactionId: paymentIntent.id,
+        provider: "STRIPE",
+        status: "COMPLETED",
+        paidAt: new Date(),
+      },
+    });
+
+    await tx.booking.update({
+      where: { id: bookingId },
+      data: { status: "PAID" },
+    });
+  });
+};
+
+const handlePaymentIntentFailed = async (paymentIntent: Stripe.PaymentIntent) => {
+  const bookingId = paymentIntent.metadata.bookingId;
+  if (!bookingId) return;
+
+  const existingPayment = await prisma.payment.findUnique({
+    where: { bookingId },
+  });
+
+  if (existingPayment) {
+    await prisma.payment.update({
+      where: { bookingId },
+      data: { status: "FAILED" },
+    });
+  } else {
+    await prisma.payment.create({
+      data: {
+        bookingId,
+        amount: paymentIntent.amount / 100,
+        transactionId: paymentIntent.id,
+        provider: "STRIPE",
+        status: "FAILED",
+      },
+    });
+  }
+};
+
+const handleChargeRefunded = async (charge: Stripe.Charge) => {
+  const paymentIntentId =
+    typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : charge.payment_intent?.id;
+
+  if (!paymentIntentId) return;
+
+  const payment = await prisma.payment.findUnique({
+    where: { transactionId: paymentIntentId },
+  });
+
+  if (!payment || payment.status === "REFUNDED") return;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { id: payment.id },
+      data: { status: "REFUNDED" },
+    });
+
+    await tx.booking.update({
+      where: { id: payment.bookingId },
+      data: { status: "CANCELLED" },
+    });
+  });
+};
+
+const handleStripeEvent = async (event: Stripe.Event) => {
+  switch (event.type) {
+    case "payment_intent.succeeded":
+      await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+      break;
+    case "payment_intent.payment_failed":
+      await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+      break;
+    case "charge.refunded":
+      await handleChargeRefunded(event.data.object as Stripe.Charge);
+      break;
+    default:
+      break;
+  }
+};
+
 export const PaymentServices = {
   createPaymentIntent,
   confirmPayment,
   getUserPaymentHistory,
   getPaymentById,
+  handleStripeEvent,
 };

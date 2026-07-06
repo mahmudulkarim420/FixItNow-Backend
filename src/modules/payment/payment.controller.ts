@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
+import type Stripe from "stripe";
 import { PaymentServices } from "./payment.service";
 import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
+import config from "../../config";
+import AppError from "../../utils/AppError";
+import stripe from "../../lib/stripe";
 
 const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
   const result = await PaymentServices.createPaymentIntent(
@@ -53,9 +57,35 @@ const getPaymentById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
+  const signature = req.headers["stripe-signature"] as string;
+  const endpointSecret = config.stripe.webhookSecret as string;
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body as Buffer,
+      signature,
+      endpointSecret
+    );
+  } catch (err) {
+    throw new AppError(400, `Webhook signature verification failed: ${(err as Error).message}`);
+  }
+
+  await PaymentServices.handleStripeEvent(event);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Webhook received successfully!",
+    data: null,
+  });
+});
+
 export const PaymentControllers = {
   createPaymentIntent,
   confirmPayment,
   getUserPaymentHistory,
   getPaymentById,
+  stripeWebhook,
 };

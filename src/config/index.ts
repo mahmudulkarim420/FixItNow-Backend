@@ -17,6 +17,7 @@ const config = {
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
     publicKey: process.env.STRIPE_PUBLIC_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   },
   nodeEnv: process.env.NODE_ENV,
 };
