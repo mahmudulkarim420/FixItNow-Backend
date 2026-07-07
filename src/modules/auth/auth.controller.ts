@@ -90,7 +90,9 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
     message: "Access token refreshed successfully!",
-    data: null,
+    data: {
+      refreshed: true,
+    },
   });
 });
 
