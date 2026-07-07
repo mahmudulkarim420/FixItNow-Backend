@@ -41,6 +41,7 @@ A complete reference for testing every API endpoint in the FixItNow-Backend proj
    STRIPE_SECRET_KEY=sk_test_xxx
    STRIPE_PUBLIC_KEY=pk_test_xxx
    STRIPE_WEBHOOK_SECRET=whsec_xxx
+   FRONTEND_URL=http://localhost:3000
    CLIENT_URL=http://localhost:3000
    ```
 
@@ -71,7 +72,6 @@ Create a Postman environment with these variables:
 | `categoryId`      |                                |
 | `bookingId`       |                                |
 | `paymentId`       |                                |
-| `technicianProfileId` |                           |
 
 > **Important:** Authentication uses **HTTP-only cookies** (`accessToken` and `refreshToken`). In Postman, enable **Automatically persist cookies** (Settings → General) so cookies are stored and sent automatically across requests.
 
@@ -562,27 +562,25 @@ Routes mounted at `/api/bookings` (see [`booking.route.ts`](src/modules/booking/
 | Auth     | CUSTOMER |
 | Body     | Required |
 
-**Description:** Creates a new booking with status `REQUESTED`. The `servicePrice` is copied from the service at creation time.
+**Description:** Creates a new booking with status `REQUESTED`. The `servicePrice` is copied from the service at creation time, and the `technicianProfileId` is derived from the booked service (the technician who owns the service) — the client does **not** send it.
 
 **Request body:**
 
 ```json
 {
   "serviceId": "550e8400-e29b-41d4-a716-446655440000",
-  "technicianProfileId": "660e8400-e29b-41d4-a716-446655440000",
   "scheduledDate": "2026-07-10",
   "timeSlot": "10:00-12:00",
   "contactNumber": "+8801712345678"
 }
 ```
 
-| Field                  | Type   | Rules                                  |
-| ---------------------- | ------ | -------------------------------------- |
-| `serviceId`            | string | required, must exist                    |
-| `technicianProfileId`  | string | required                                |
-| `scheduledDate`        | string | required, valid date (parseable by JS) |
-| `timeSlot`             | string | required                                |
-| `contactNumber`        | string | required                                |
+| Field            | Type   | Rules                                  |
+| ---------------- | ------ | -------------------------------------- |
+| `serviceId`      | string | required, must exist                    |
+| `scheduledDate`  | string | required, valid date (parseable by JS) |
+| `timeSlot`       | string | required                                |
+| `contactNumber`  | string | required                                |
 
 **Errors:** `404` service not found; `400` validation.
 
@@ -636,17 +634,21 @@ Routes mounted at `/api/bookings` (see [`booking.route.ts`](src/modules/booking/
 | Path     | `/api/bookings/:id/cancel` |
 | Auth     | CUSTOMER (booking owner) |
 | Params   | `id` (UUID) |
+| Body     | `{ "reason": "Booked by mistake" }` (`reason` is **required**) |
 
-**Description:** Cancels a booking. Enforces the [`VALID_TRANSITIONS`](src/modules/booking/bookingStatus.ts:4) state machine. If the booking has a `COMPLETED` payment, a **Stripe refund** is issued and the payment status becomes `REFUNDED`.
+**Description:** Cancels a booking owned by the authenticated customer. The `reason` is required and stored on the booking as `cancellationReason`. Behaviour depends on the booking/payment state:
 
-**Valid cancellation transitions:**
-- `REQUESTED → CANCELLED` ✅
-- `ACCEPTED → CANCELLED` ✅
-- `PAID → CANCELLED` ✅ (triggers refund)
-- `IN_PROGRESS → CANCELLED` ❌ (not allowed)
-- `COMPLETED → CANCELLED` ❌ (not allowed)
+| Case | Booking status | Payment status | Result |
+| ---- | -------------- | -------------- | ------ |
+| 1 | `ACCEPTED` | `PENDING` | Cancelled, **no refund**, payment stays `PENDING`. |
+| 2 | `PAID` | `COMPLETED` | **Stripe refund** issued via the saved `transactionId`; booking → `CANCELLED`, payment → `REFUNDED` (atomic Prisma transaction). |
+| 3 | `IN_PROGRESS` | — | `400` "Booking cannot be cancelled after the service has started." |
+| 4 | `COMPLETED` | — | `400` "Completed bookings cannot be cancelled." |
+| 5 | `CANCELLED` | — | `400` "Booking has already been cancelled." |
 
-**Errors:** `404` booking not found; `403` not the owner; `400` invalid transition; `400` invalid UUID.
+> `REQUESTED → CANCELLED` is also allowed (no payment/refund). The [`VALID_TRANSITIONS`](src/modules/booking/bookingStatus.ts:4) state machine is still enforced as a final guard.
+
+**Errors:** `404` booking not found; `403` not the owner; `400` cannot be cancelled (cases 3–5); `400` invalid UUID; `400` missing `reason`.
 
 ---
 
@@ -664,12 +666,13 @@ Routes mounted at `/api/payments` (see [`payment.route.ts`](src/modules/payment/
 | Headers  | `stripe-signature` (required) |
 | Body     | Raw body (NOT parsed as JSON) |
 
-**Description:** Stripe webhook endpoint. Registered **before** `express.json()` in [`app.ts`](src/app.ts:20), so it receives the raw body. Verifies the `stripe-signature` header against `STRIPE_WEBHOOK_SECRET`.
+**Description:** Stripe webhook endpoint. Registered **before** `express.json()` in [`app.ts`](src/app.ts:24), so it receives the raw body. Verifies the `stripe-signature` header against `STRIPE_WEBHOOK_SECRET`.
 
-**Handled events** (see [`payment.service.ts`](src/modules/payment/payment.service.ts:214)):
-- `payment_intent.succeeded` → creates payment, sets booking to `PAID`.
-- `payment_intent.payment_failed` → creates/updates payment to `FAILED`.
-- `charge.refunded` → sets payment to `REFUNDED`, booking to `CANCELLED`.
+**Handled events** (see [`payment.service.ts`](src/modules/payment/payment.service.ts:217)):
+- `checkout.session.completed` → marks payment `COMPLETED`, stores the Payment Intent / transaction ID, sets booking to `PAID`. Only fires when `session.payment_status` is `paid`. Idempotent — duplicate events for an already-completed payment are ignored (the check runs inside the transaction).
+- `checkout.session.async_payment_succeeded` → same handling as `checkout.session.completed` for delayed-payment methods (e.g. bank transfers) that settle after the session is created.
+- `checkout.session.async_payment_failed` → marks payment to `FAILED`.
+- `charge.refunded` → sets payment to `REFUNDED`, booking to `CANCELLED`. Idempotent — the lookup and `REFUNDED` check run inside the transaction.
 
 **Errors:** `400` missing/invalid signature; `400` verification failed.
 
@@ -677,16 +680,16 @@ Routes mounted at `/api/payments` (see [`payment.route.ts`](src/modules/payment/
 
 ---
 
-### `POST /api/payments/create`
+### `POST /api/payments/checkout`
 
 | Property | Value |
 | -------- | ----- |
 | Method   | POST |
-| Path     | `/api/payments/create` |
+| Path     | `/api/payments/checkout` |
 | Auth     | CUSTOMER |
 | Body     | Required |
 
-**Description:** Creates a Stripe PaymentIntent for a booking. The booking **must be in `ACCEPTED` status**. Returns the `clientSecret` for frontend confirmation.
+**Description:** Creates a Stripe Hosted Checkout Session for a booking. The booking **must be in `ACCEPTED` status** and not already paid. The payment amount is derived from the booking's `servicePrice`. Returns a `url` the frontend should redirect the customer to, plus the `sessionId`. A `PENDING` payment record is created (or reused) and finalized by the webhook on success.
 
 **Request body:**
 
@@ -700,38 +703,21 @@ Routes mounted at `/api/payments` (see [`payment.route.ts`](src/modules/payment/
 | ----------- | ------ | -------------- |
 | `bookingId` | string | required       |
 
-**Errors:** `404` booking not found; `403` not the booking owner; `400` booking not `ACCEPTED`.
-
----
-
-### `POST /api/payments/confirm`
-
-| Property | Value |
-| -------- | ----- |
-| Method   | POST |
-| Path     | `/api/payments/confirm` |
-| Auth     | CUSTOMER |
-| Body     | Required |
-
-**Description:** Confirms a payment manually. Creates a `COMPLETED` payment and sets the booking to `PAID`. The `amount` must exactly match the booking's `servicePrice`.
-
-**Request body:**
+**Response body:**
 
 ```json
 {
-  "bookingId": "550e8400-e29b-41d4-a716-446655440000",
-  "transactionId": "pi_3ExampleTransactionId123",
-  "amount": 120.5
+  "success": true,
+  "statusCode": 200,
+  "message": "Stripe Checkout session created successfully!",
+  "data": {
+    "url": "https://checkout.stripe.com/c/pay/cs_test_...",
+    "sessionId": "cs_test_a1b2c3..."
+  }
 }
 ```
 
-| Field           | Type   | Rules                          |
-| --------------- | ------ | ------------------------------ |
-| `bookingId`     | string | required                       |
-| `transactionId` | string | required                       |
-| `amount`        | number | required, positive, must match |
-
-**Errors:** `404` booking not found; `400` amount mismatch; `403` not the owner.
+**Errors:** `404` booking not found; `403` not the booking owner; `400` booking not `ACCEPTED`; `400` already paid.
 
 ---
 
@@ -1152,10 +1138,12 @@ CANCELLED → (terminal)
 - [ ] Technician sets `REQUESTED → ACCEPTED` via `PATCH /api/technician/bookings/:id` → `200`.
 - [ ] Technician sets `REQUESTED → DECLINED` → `200`.
 - [ ] Technician sets `REQUESTED → COMPLETED` (invalid) → note: the technician route does **not** call `assertTransition`; verify actual behavior and document it.
-- [ ] Customer cancels `REQUESTED → CANCELLED` via `PATCH /api/bookings/:id/cancel` → `200`.
-- [ ] Customer cancels `ACCEPTED → CANCELLED` → `200`.
-- [ ] Customer cancels `COMPLETED → CANCELLED` → `400` "Invalid status transition".
-- [ ] Customer cancels `IN_PROGRESS → CANCELLED` → `400` "Invalid status transition".
+- [ ] Customer cancels `REQUESTED → CANCELLED` via `PATCH /api/bookings/:id/cancel` with `{ "reason": "..." }` → `200`, `cancellationReason` stored.
+- [ ] Customer cancels `ACCEPTED → CANCELLED` (payment `PENDING`) → `200`, no refund, payment stays `PENDING`.
+- [ ] Customer cancels `COMPLETED → CANCELLED` → `400` "Completed bookings cannot be cancelled."
+- [ ] Customer cancels `IN_PROGRESS → CANCELLED` → `400` "Booking cannot be cancelled after the service has started."
+- [ ] Customer cancels an already-`CANCELLED` booking → `400` "Booking has already been cancelled."
+- [ ] Customer cancels with missing `reason` → `400` validation error.
 - [ ] Customer cancels a booking they don't own → `403`.
 - [ ] Technician updates a booking not assigned to them → `403`.
 - [ ] Technician updates with invalid `status` value → `400`.
@@ -1163,14 +1151,11 @@ CANCELLED → (terminal)
 
 ### 14. Payment & Refund Flow
 
-- [ ] `POST /api/payments/create` on an `ACCEPTED` booking → `200`, returns `clientSecret`.
-- [ ] `POST /api/payments/create` on a `REQUESTED` booking → `400` "Booking must be accepted before payment!".
-- [ ] `POST /api/payments/create` as non-owner → `403`.
-- [ ] `POST /api/payments/create` on non-existent booking → `404`.
-- [ ] `POST /api/payments/confirm` with correct `amount` (matching `servicePrice`) → `200`, payment `COMPLETED`, booking → `PAID`.
-- [ ] `POST /api/payments/confirm` with **mismatched** `amount` → `400` "Payment amount mismatch!".
-- [ ] `POST /api/payments/confirm` as non-owner → `403`.
-- [ ] `POST /api/payments/confirm` missing `transactionId` → `400`.
+- [ ] `POST /api/payments/checkout` on an `ACCEPTED` booking → `200`, returns `url` + `sessionId`.
+- [ ] `POST /api/payments/checkout` on a `REQUESTED` booking → `400` "Booking must be accepted before payment!".
+- [ ] `POST /api/payments/checkout` as non-owner → `403`.
+- [ ] `POST /api/payments/checkout` on non-existent booking → `404`.
+- [ ] `POST /api/payments/checkout` on an already-paid booking → `400` "This booking has already been paid!".
 - [ ] `GET /api/payments` as CUSTOMER → only own payments.
 - [ ] `GET /api/payments` as ADMIN → all payments.
 - [ ] `GET /api/payments/:id` as the owning customer → `200`.
@@ -1180,8 +1165,8 @@ CANCELLED → (terminal)
 - [ ] `GET /api/payments/:id` invalid UUID → `400`.
 
 **Refund flow:**
-- [ ] Create a booking → technician accepts → customer pays (confirm) → booking is `PAID` with `COMPLETED` payment.
-- [ ] Customer cancels the `PAID` booking via `PATCH /api/bookings/:id/cancel` → `200`, payment status → `REFUNDED`, booking → `CANCELLED`. (Requires valid Stripe keys; otherwise expect a Stripe error.)
+- [ ] Create a booking → technician accepts → customer checks out → webhook marks booking `PAID` with `COMPLETED` payment.
+- [ ] Customer cancels the `PAID` booking via `PATCH /api/bookings/:id/cancel` with `{ "reason": "..." }` → `200`, payment status → `REFUNDED`, booking → `CANCELLED`, `cancellationReason` stored. (Requires valid Stripe keys; otherwise expect a Stripe error.)
 - [ ] Cancel a booking with **no** payment → no refund attempted, booking → `CANCELLED`.
 - [ ] Cancel a booking with a `PENDING`/`FAILED` payment → no refund (only `COMPLETED` payments trigger refunds).
 
@@ -1189,10 +1174,13 @@ CANCELLED → (terminal)
 
 - [ ] `POST /api/payments/webhook` with **no** `stripe-signature` header → `400` "Missing or invalid Stripe signature header".
 - [ ] `POST /api/payments/webhook` with an **invalid** signature → `400` "Webhook signature verification failed".
-- [ ] Use Stripe CLI to forward a `payment_intent.succeeded` event → payment created, booking → `PAID`.
-- [ ] Forward `payment_intent.payment_failed` → payment status → `FAILED`.
+- [ ] Use Stripe CLI to forward a `checkout.session.completed` event (with `payment_status: paid`) → payment marked `COMPLETED`, booking → `PAID`.
+- [ ] Forward a `checkout.session.completed` with `payment_status: unpaid` → no state change (handler ignores it).
+- [ ] Forward `checkout.session.async_payment_succeeded` → payment marked `COMPLETED`, booking → `PAID`.
+- [ ] Forward `checkout.session.async_payment_failed` → payment status → `FAILED`.
 - [ ] Forward `charge.refunded` → payment → `REFUNDED`, booking → `CANCELLED`.
-- [ ] Verify idempotency: a second `payment_intent.succeeded` for the same booking does **not** create a duplicate payment (existing payment check).
+- [ ] Verify idempotency: a second `checkout.session.completed` for the same booking does **not** create a duplicate payment or change state (completed-payment check runs inside the transaction).
+- [ ] Verify refund idempotency: a second `charge.refunded` for the same payment does **not** change state.
 - [ ] Verify the webhook endpoint receives a **raw** body (not parsed JSON) — confirm by sending a raw payload in Postman with `Content-Type: application/json` and body type "raw".
 
 ### 16. Reviews
@@ -1246,7 +1234,7 @@ Run this complete scenario to validate the entire system:
 4. [ ] Login as CUSTOMER → browse services → view a technician profile.
 5. [ ] Customer creates a booking (`REQUESTED`).
 6. [ ] Technician views their bookings → accepts the booking (`ACCEPTED`).
-7. [ ] Customer creates a payment intent → confirms payment → booking becomes `PAID`.
+7. [ ] Customer creates a Checkout Session (`POST /api/payments/checkout`) → redirects to Stripe → pays → webhook marks booking `PAID`.
 8. [ ] Technician sets booking to `IN_PROGRESS` → then `COMPLETED`.
 9. [ ] Customer leaves a review → verify technician's `averageRating` updated.
 10. [ ] Admin views all users, bookings, and payments.
@@ -1284,20 +1272,19 @@ Run this complete scenario to validate the entire system:
 | 21 | GET | `/api/bookings/:id` | CUSTOMER, TECHNICIAN, ADMIN |
 | 22 | PATCH | `/api/bookings/:id/cancel` | CUSTOMER |
 | 23 | POST | `/api/payments/webhook` | None (Stripe) |
-| 24 | POST | `/api/payments/create` | CUSTOMER |
-| 25 | POST | `/api/payments/confirm` | CUSTOMER |
-| 26 | GET | `/api/payments` | CUSTOMER, ADMIN |
-| 27 | GET | `/api/payments/:id` | CUSTOMER, ADMIN |
-| 28 | POST | `/api/reviews` | CUSTOMER |
-| 29 | GET | `/api/admin/users` | ADMIN |
-| 30 | PATCH | `/api/admin/users/:id` | ADMIN |
-| 31 | GET | `/api/admin/bookings` | ADMIN |
-| 32 | GET | `/api/admin/bookings/:id` | ADMIN |
-| 33 | GET | `/api/admin/payments` | ADMIN |
-| 34 | GET | `/api/admin/payments/:id` | ADMIN |
-| 35 | GET | `/api/admin/categories` | ADMIN |
-| 36 | POST | `/api/admin/categories` | ADMIN |
-| 37 | PATCH | `/api/admin/categories/:id` | ADMIN |
-| 38 | DELETE | `/api/admin/categories/:id` | ADMIN |
+| 24 | POST | `/api/payments/checkout` | CUSTOMER |
+| 25 | GET | `/api/payments` | CUSTOMER, ADMIN |
+| 26 | GET | `/api/payments/:id` | CUSTOMER, ADMIN |
+| 27 | POST | `/api/reviews` | CUSTOMER |
+| 28 | GET | `/api/admin/users` | ADMIN |
+| 29 | PATCH | `/api/admin/users/:id` | ADMIN |
+| 30 | GET | `/api/admin/bookings` | ADMIN |
+| 31 | GET | `/api/admin/bookings/:id` | ADMIN |
+| 32 | GET | `/api/admin/payments` | ADMIN |
+| 33 | GET | `/api/admin/payments/:id` | ADMIN |
+| 34 | GET | `/api/admin/categories` | ADMIN |
+| 35 | POST | `/api/admin/categories` | ADMIN |
+| 36 | PATCH | `/api/admin/categories/:id` | ADMIN |
+| 37 | DELETE | `/api/admin/categories/:id` | ADMIN |
 
-**Total: 38 endpoints**
+**Total: 37 endpoints**

@@ -45,7 +45,8 @@ const getBookingById = catchAsync(async (req: Request, res: Response) => {
 const cancelBooking = catchAsync(async (req: Request, res: Response) => {
   const result = await BookingServices.cancelBooking(
     req.params.id as string,
-    req.user!.id
+    req.user!.id,
+    req.body.reason
   );
 
   sendResponse(res, {

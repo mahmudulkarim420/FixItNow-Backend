@@ -15,6 +15,7 @@ model Booking {
   scheduledDate DateTime      @db.Date
   timeSlot      String
   status        BookingStatus @default(REQUESTED)
+  cancellationReason String?
 
   review  Review?
   payment Payment?

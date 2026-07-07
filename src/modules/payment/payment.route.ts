@@ -12,14 +12,19 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Payment
- *   description: Payment operations via Stripe
+ *   description: Payment operations via Stripe Checkout
  */
 
 /**
  * @swagger
- * /api/payments/create:
+ * /api/payments/checkout:
  *   post:
- *     summary: Create a payment intent
+ *     summary: Create a Stripe Checkout Session
+ *     description: |
+ *       Creates a Stripe Hosted Checkout Session for a booking and returns the
+ *       Checkout URL the frontend should redirect the customer to.
+ *       The booking must be in `ACCEPTED` status and not already paid.
+ *       On successful payment, the Stripe webhook marks the booking as `PAID`.
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
@@ -43,54 +48,39 @@ const router = express.Router();
  *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
- *         description: Payment intent created
+ *         description: Checkout session created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 statusCode:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                       description: Stripe Checkout URL to redirect the customer to
+ *                     sessionId:
+ *                       type: string
+ *                       description: Stripe Checkout Session ID
+ *       400:
+ *         description: Booking not accepted or already paid
+ *       403:
+ *         description: Not authorized to pay for this booking
+ *       404:
+ *         description: Booking not found
  */
 router.post(
-  "/create",
+  "/checkout",
   auth("CUSTOMER"),
-  validateRequest(PaymentValidations.createPaymentIntentValidationSchema),
-  PaymentControllers.createPaymentIntent
-);
-
-/**
- * @swagger
- * /api/payments/confirm:
- *   post:
- *     summary: Confirm a payment
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - bookingId
- *               - transactionId
- *             properties:
- *               bookingId:
- *                 type: string
- *               transactionId:
- *                 type: string
- *               amount:
- *                 type: number
- *     responses:
- *       200:
- *         description: Payment confirmed
- */
-router.post(
-  "/confirm",
-  auth("CUSTOMER"),
-  validateRequest(PaymentValidations.confirmPaymentValidationSchema),
-  PaymentControllers.confirmPayment
+  validateRequest(PaymentValidations.createCheckoutSessionValidationSchema),
+  PaymentControllers.createCheckoutSession
 );
 
 /**

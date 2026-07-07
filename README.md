@@ -28,7 +28,7 @@ A production-ready REST API for a home-service marketplace platform (FixItNow) w
 - **Role-based access control** (CUSTOMER, TECHNICIAN, ADMIN)
 - **Service CRUD** for technicians with category & price filtering
 - **Booking system** with a declarative status-transition state machine
-- **Stripe payments** — Payment Intents, confirmation, and webhook handling (success/failure/refund)
+- **Stripe payments** — Hosted Checkout Sessions, webhook handling (success/failure/refund), and automatic refunds
 - **Automatic refunds** when a customer cancels a paid booking before it starts
 - **Reviews & ratings** with automatic technician average-rating recalculation
 - **Admin dashboard** — manage users, bookings, payments, and categories
@@ -167,7 +167,8 @@ STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_PUBLIC_KEY=pk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 
-# Frontend (CORS origin)
+# Frontend (CORS origin + Stripe Checkout redirect URLs)
+FRONTEND_URL=http://localhost:3000
 CLIENT_URL=http://localhost:3000
 ```
 
@@ -259,13 +260,12 @@ Base URL: `http://localhost:5000/api`
 
 ### Payments (`/api/payments`)
 
-| Method | Endpoint           | Access             | Description                       |
-| ------ | ------------------ | ------------------ | --------------------------------- |
-| POST   | `/create`          | CUSTOMER           | Create a Stripe Payment Intent    |
-| POST   | `/confirm`         | CUSTOMER           | Confirm a payment                 |
-| GET    | `/`                | CUSTOMER, ADMIN    | List payment history              |
-| GET    | `/:id`             | CUSTOMER, ADMIN    | Get a single payment              |
-| POST   | `/webhook`         | Stripe (signature) | Stripe webhook event handler      |
+| Method | Endpoint           | Access             | Description                                  |
+| ------ | ------------------ | ------------------ | -------------------------------------------- |
+| POST   | `/checkout`        | CUSTOMER           | Create a Stripe Checkout Session (returns URL) |
+| GET    | `/`                | CUSTOMER, ADMIN    | List payment history                         |
+| GET    | `/:id`             | CUSTOMER, ADMIN    | Get a single payment                         |
+| POST   | `/webhook`         | Stripe (signature) | Stripe webhook event handler                 |
 
 ### Reviews (`/api/reviews`)
 
@@ -324,12 +324,17 @@ REQUESTED ──► ACCEPTED ──► PAID ──► IN_PROGRESS ──► COMP
 
 ## Payments & Stripe Webhooks
 
-- Customers create a **Payment Intent** via `POST /payments/create`.
-- After client-side confirmation, `POST /payments/confirm` records the payment and updates the booking to `PAID`.
-- The **Stripe webhook** (`POST /payments/webhook`) listens for:
-  - `payment_intent.succeeded`
-  - `payment_intent.failed`
-  - `charge.refunded`
+Payments use **Stripe Hosted Checkout** (no client-side card handling):
+
+1. The customer calls `POST /payments/checkout` with a `bookingId`. The backend creates a Stripe Checkout Session (amount derived from the booking's `servicePrice`) and returns a `url` to redirect to.
+2. Stripe hosts the payment page. On `success_url` / `cancel_url` the customer is redirected back to the frontend (`FRONTEND_URL`).
+3. The **Stripe webhook** (`POST /payments/webhook`) verifies the signature and, on `checkout.session.completed`, marks the booking as `PAID`, stores the Payment Intent / transaction ID, and is **idempotent** (duplicate events for an already-completed payment are ignored).
+
+Handled webhook events:
+
+- `checkout.session.completed` → payment `COMPLETED`, booking `PAID`
+- `checkout.session.async_payment_failed` → payment `FAILED`
+- `charge.refunded` → payment `REFUNDED`, booking `CANCELLED`
 
 To test webhooks locally:
 

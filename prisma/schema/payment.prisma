@@ -9,6 +9,7 @@ model Payment {
   provider      String
   status        PaymentStatus @default(PENDING)
 
+  stripeCheckoutSessionId String?
   paidAt    DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

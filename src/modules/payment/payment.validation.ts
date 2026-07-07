@@ -1,23 +1,15 @@
 import { z } from "zod";
 
-const createPaymentIntentValidationSchema = z.object({
+const createCheckoutSessionValidationSchema = z.object({
   body: z.object({
     bookingId: z.string({ message: "Booking ID is required" }),
   }),
 });
 
-const confirmPaymentValidationSchema = z.object({
-  body: z.object({
-    bookingId: z.string({ message: "Booking ID is required" }),
-    transactionId: z.string({ message: "Transaction ID is required" }),
-    amount: z.number({ message: "Amount is required" }).positive("Amount must be positive"),
-  }),
-});
-
-export type TCreatePaymentIntentPayload = z.infer<typeof createPaymentIntentValidationSchema>["body"];
-export type TConfirmPaymentPayload = z.infer<typeof confirmPaymentValidationSchema>["body"];
+export type TCreateCheckoutSessionPayload = z.infer<
+  typeof createCheckoutSessionValidationSchema
+>["body"];
 
 export const PaymentValidations = {
-  createPaymentIntentValidationSchema,
-  confirmPaymentValidationSchema,
+  createCheckoutSessionValidationSchema,
 };

@@ -23,7 +23,7 @@ const createBooking = async (
     data: {
       customerId,
       serviceId: payload.serviceId,
-      technicianProfileId: payload.technicianProfileId,
+      technicianProfileId: service.technicianProfileId,
       servicePrice: service.price,
       contactNumber: payload.contactNumber,
       scheduledDate: new Date(payload.scheduledDate),
@@ -96,7 +96,7 @@ const getBookingById = async (bookingId: string, userId: string, role: string) =
   return result;
 };
 
-const cancelBooking = async (bookingId: string, userId: string) => {
+const cancelBooking = async (bookingId: string, userId: string, reason: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: { payment: true },
@@ -108,6 +108,18 @@ const cancelBooking = async (bookingId: string, userId: string) => {
 
   if (booking.customerId !== userId) {
     throw new AppError(403, "You are not authorized to cancel this booking!");
+  }
+
+  if (booking.status === "CANCELLED") {
+    throw new AppError(400, "Booking has already been cancelled.");
+  }
+
+  if (booking.status === "IN_PROGRESS") {
+    throw new AppError(400, "Booking cannot be cancelled after the service has started.");
+  }
+
+  if (booking.status === "COMPLETED") {
+    throw new AppError(400, "Completed bookings cannot be cancelled.");
   }
 
   assertTransition(booking.status, "CANCELLED");
@@ -133,7 +145,7 @@ const cancelBooking = async (bookingId: string, userId: string) => {
 
     return tx.booking.update({
       where: { id: bookingId },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELLED", cancellationReason: reason },
       include: {
         service: true,
         customer: { select: { name: true, email: true } },

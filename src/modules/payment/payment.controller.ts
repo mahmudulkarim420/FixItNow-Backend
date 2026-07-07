@@ -7,25 +7,15 @@ import config from "../../config";
 import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
 
-const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
-  const result = await PaymentServices.createPaymentIntent(
+const createCheckoutSession = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.createCheckoutSession(
     req.body.bookingId,
     req.user!.id
   );
 
   sendResponse(res, {
     statusCode: 200,
-    message: "Payment intent created successfully!",
-    data: result,
-  });
-});
-
-const confirmPayment = catchAsync(async (req: Request, res: Response) => {
-  const result = await PaymentServices.confirmPayment(req.body, req.user!.id);
-
-  sendResponse(res, {
-    statusCode: 200,
-    message: "Payment confirmed successfully!",
+    message: "Stripe Checkout session created successfully!",
     data: result,
   });
 });
@@ -87,8 +77,7 @@ const stripeWebhook = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const PaymentControllers = {
-  createPaymentIntent,
-  confirmPayment,
+  createCheckoutSession,
   getUserPaymentHistory,
   getPaymentById,
   stripeWebhook,
