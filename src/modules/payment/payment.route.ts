@@ -12,7 +12,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Payment
- *   description: Payment operations
+ *   description: Payment operations via Stripe
  */
 
 /**
@@ -23,6 +23,12 @@ const router = express.Router();
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -34,6 +40,7 @@ const router = express.Router();
  *             properties:
  *               bookingId:
  *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
  *         description: Payment intent created
@@ -42,7 +49,7 @@ router.post(
   "/create",
   auth("CUSTOMER"),
   validateRequest(PaymentValidations.createPaymentIntentValidationSchema),
-  PaymentControllers.createPaymentIntent,
+  PaymentControllers.createPaymentIntent
 );
 
 /**
@@ -53,6 +60,12 @@ router.post(
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -67,6 +80,8 @@ router.post(
  *                 type: string
  *               transactionId:
  *                 type: string
+ *               amount:
+ *                 type: number
  *     responses:
  *       200:
  *         description: Payment confirmed
@@ -75,7 +90,7 @@ router.post(
   "/confirm",
   auth("CUSTOMER"),
   validateRequest(PaymentValidations.confirmPaymentValidationSchema),
-  PaymentControllers.confirmPayment,
+  PaymentControllers.confirmPayment
 );
 
 /**
@@ -86,11 +101,21 @@ router.post(
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Payment history retrieved
  */
-router.get("/", auth("CUSTOMER", "ADMIN"), PaymentControllers.getUserPaymentHistory);
+router.get(
+  "/",
+  auth("CUSTOMER", "ADMIN"),
+  PaymentControllers.getUserPaymentHistory
+);
 
 /**
  * @swagger
@@ -106,15 +131,20 @@ router.get("/", auth("CUSTOMER", "ADMIN"), PaymentControllers.getUserPaymentHist
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
- *         description: Payment details retrieved
+ *         description: Payment details
  */
 router.get(
   "/:id",
   auth("CUSTOMER", "ADMIN"),
   validateParams(idParamValidationSchema),
-  PaymentControllers.getPaymentById,
+  PaymentControllers.getPaymentById
 );
 
 export const PaymentRoutes = router;

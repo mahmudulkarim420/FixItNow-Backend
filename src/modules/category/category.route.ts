@@ -23,6 +23,12 @@ const router = express.Router();
  *     tags: [Category]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: List of categories
@@ -37,6 +43,12 @@ router.get("/", auth("ADMIN"), CategoryControllers.getAllCategoriesAdmin);
  *     tags: [Category]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -58,7 +70,7 @@ router.post(
   "/",
   auth("ADMIN"),
   validateRequest(CategoryValidations.createCategoryValidationSchema),
-  CategoryControllers.createCategory,
+  CategoryControllers.createCategory
 );
 
 /**
@@ -75,8 +87,13 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
@@ -95,7 +112,7 @@ router.patch(
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
   validateRequest(CategoryValidations.updateCategoryValidationSchema),
-  CategoryControllers.updateCategory,
+  CategoryControllers.updateCategory
 );
 
 /**
@@ -112,6 +129,11 @@ router.patch(
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Category deleted
@@ -120,7 +142,7 @@ router.delete(
   "/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  CategoryControllers.deleteCategory,
+  CategoryControllers.deleteCategory
 );
 
 export const CategoryRoutes = router;

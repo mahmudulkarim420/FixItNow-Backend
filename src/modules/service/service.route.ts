@@ -26,6 +26,7 @@ const router = express.Router();
  *         description: List of services
  */
 router.get("/", ServiceControllers.getAllServices);
+
 /**
  * @swagger
  * /api/services/categories:
@@ -34,7 +35,7 @@ router.get("/", ServiceControllers.getAllServices);
  *     tags: [Service]
  *     responses:
  *       200:
- *         description: List of categories
+ *         description: List of categories with counts
  */
 router.get("/categories", ServiceControllers.getAllCategories);
 
@@ -64,6 +65,12 @@ router.get("/:id", validateParams(idParamValidationSchema), ServiceControllers.g
  *     tags: [Service]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -72,12 +79,13 @@ router.get("/:id", validateParams(idParamValidationSchema), ServiceControllers.g
  *             type: object
  *             required:
  *               - categoryId
- *               - name
+ *               - title
+ *               - description
  *               - price
  *             properties:
  *               categoryId:
  *                 type: string
- *               name:
+ *               title:
  *                 type: string
  *               description:
  *                 type: string
@@ -91,7 +99,7 @@ router.post(
   "/",
   auth("TECHNICIAN"),
   validateRequest(ServiceValidations.createServiceValidationSchema),
-  ServiceControllers.createService,
+  ServiceControllers.createService
 );
 
 /**
@@ -108,18 +116,26 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               title:
  *                 type: string
  *               description:
  *                 type: string
  *               price:
  *                 type: number
+ *               categoryId:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Service updated
@@ -129,7 +145,7 @@ router.patch(
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
   validateRequest(ServiceValidations.updateServiceValidationSchema),
-  ServiceControllers.updateService,
+  ServiceControllers.updateService
 );
 
 /**
@@ -146,6 +162,11 @@ router.patch(
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Service deleted
@@ -154,7 +175,7 @@ router.delete(
   "/:id",
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
-  ServiceControllers.deleteService,
+  ServiceControllers.deleteService
 );
 
 export const ServiceRoutes = router;

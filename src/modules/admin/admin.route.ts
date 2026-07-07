@@ -23,6 +23,12 @@ const router = express.Router();
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: List of users
@@ -43,16 +49,23 @@ router.get("/users", auth("ADMIN"), AdminControllers.getAllUsers);
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - status
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [ACTIVE, BLOCKED]
+ *                 enum: [ACTIVE, BANNED]
  *     responses:
  *       200:
  *         description: User status updated
@@ -62,7 +75,7 @@ router.patch(
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
   validateRequest(AdminValidations.toggleUserStatusValidationSchema),
-  AdminControllers.toggleUserStatus,
+  AdminControllers.toggleUserStatus
 );
 
 /**
@@ -73,11 +86,34 @@ router.patch(
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: List of all bookings
+ *         description: List of bookings
  */
 router.get("/bookings", auth("ADMIN"), AdminControllers.getAllBookings);
+
 /**
  * @swagger
  * /api/admin/bookings/{id}:
@@ -92,6 +128,11 @@ router.get("/bookings", auth("ADMIN"), AdminControllers.getAllBookings);
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Booking details retrieved
@@ -100,7 +141,7 @@ router.get(
   "/bookings/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  AdminControllers.getBookingById,
+  AdminControllers.getBookingById
 );
 
 /**
@@ -111,11 +152,18 @@ router.get(
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
- *         description: List of all payments
+ *         description: List of payments
  */
 router.get("/payments", auth("ADMIN"), AdminControllers.getAllPayments);
+
 /**
  * @swagger
  * /api/admin/payments/{id}:
@@ -130,6 +178,11 @@ router.get("/payments", auth("ADMIN"), AdminControllers.getAllPayments);
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Payment details retrieved
@@ -138,7 +191,7 @@ router.get(
   "/payments/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  AdminControllers.getPaymentById,
+  AdminControllers.getPaymentById
 );
 
 export const AdminRoutes = router;

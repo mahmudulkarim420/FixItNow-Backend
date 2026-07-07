@@ -23,6 +23,12 @@ const router = express.Router();
  *     tags: [Booking]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -31,13 +37,21 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - serviceId
- *               - appointmentDate
+ *               - technicianProfileId
+ *               - scheduledDate
+ *               - timeSlot
+ *               - contactNumber
  *             properties:
  *               serviceId:
  *                 type: string
- *               appointmentDate:
+ *               technicianProfileId:
  *                 type: string
- *                 format: date-time
+ *               scheduledDate:
+ *                 type: string
+ *               timeSlot:
+ *                 type: string
+ *               contactNumber:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Booking created
@@ -46,7 +60,7 @@ router.post(
   "/",
   auth("CUSTOMER"),
   validateRequest(BookingValidations.createBookingValidationSchema),
-  BookingControllers.createBooking,
+  BookingControllers.createBooking
 );
 
 /**
@@ -57,11 +71,21 @@ router.post(
  *     tags: [Booking]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: List of bookings
  */
-router.get("/", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), BookingControllers.getAllBookings);
+router.get(
+  "/",
+  auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
+  BookingControllers.getAllBookings
+);
 
 /**
  * @swagger
@@ -77,6 +101,11 @@ router.get("/", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), BookingControllers.getA
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Booking details
@@ -85,7 +114,7 @@ router.get(
   "/:id",
   auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
   validateParams(idParamValidationSchema),
-  BookingControllers.getBookingById,
+  BookingControllers.getBookingById
 );
 
 /**
@@ -102,6 +131,11 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Booking cancelled
@@ -110,7 +144,7 @@ router.patch(
   "/:id/cancel",
   auth("CUSTOMER"),
   validateParams(idParamValidationSchema),
-  BookingControllers.cancelBooking,
+  BookingControllers.cancelBooking
 );
 
 export const BookingRoutes = router;

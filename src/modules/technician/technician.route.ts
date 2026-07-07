@@ -23,11 +23,21 @@ const router = express.Router();
  *     tags: [Technician]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: List of bookings
  */
-router.get("/bookings", auth("TECHNICIAN"), TechnicianControllers.getTechnicianBookings);
+router.get(
+  "/bookings",
+  auth("TECHNICIAN"),
+  TechnicianControllers.getTechnicianBookings
+);
 
 /**
  * @swagger
@@ -43,15 +53,23 @@ router.get("/bookings", auth("TECHNICIAN"), TechnicianControllers.getTechnicianB
  *         required: true
  *         schema:
  *           type: string
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - status
  *             properties:
  *               status:
  *                 type: string
+ *                 enum: [ACCEPTED, DECLINED, IN_PROGRESS, COMPLETED]
  *     responses:
  *       200:
  *         description: Booking updated
@@ -61,7 +79,7 @@ router.patch(
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
   validateRequest(TechnicianValidations.updateBookingStatusValidationSchema),
-  TechnicianControllers.updateBookingStatus,
+  TechnicianControllers.updateBookingStatus
 );
 
 /**
@@ -72,6 +90,12 @@ router.patch(
  *     tags: [Technician]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -79,12 +103,14 @@ router.patch(
  *           schema:
  *             type: object
  *             properties:
- *               specialties:
- *                 type: array
- *                 items:
- *                   type: string
+ *               bio:
+ *                 type: string
  *               experience:
  *                 type: number
+ *               hourlyRate:
+ *                 type: number
+ *               location:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Profile updated
@@ -93,7 +119,7 @@ router.put(
   "/profile",
   auth("TECHNICIAN"),
   validateRequest(TechnicianValidations.updateProfileValidationSchema),
-  TechnicianControllers.updateProfile,
+  TechnicianControllers.updateProfile
 );
 
 /**
@@ -104,6 +130,12 @@ router.put(
  *     tags: [Technician]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -111,8 +143,8 @@ router.put(
  *           schema:
  *             type: object
  *             properties:
- *               isAvailable:
- *                 type: boolean
+ *               availability:
+ *                 type: object
  *     responses:
  *       200:
  *         description: Availability updated
@@ -121,7 +153,7 @@ router.put(
   "/availability",
   auth("TECHNICIAN"),
   validateRequest(TechnicianValidations.updateAvailabilityValidationSchema),
-  TechnicianControllers.updateAvailability,
+  TechnicianControllers.updateAvailability
 );
 
 const listingRouter = express.Router();
@@ -132,11 +164,21 @@ const listingRouter = express.Router();
  *   get:
  *     summary: Get all technicians
  *     tags: [Technician]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: List of technicians
  */
 listingRouter.get("/", TechnicianControllers.getAllTechnicians);
+
 /**
  * @swagger
  * /api/services/technicians/{id}:
@@ -156,7 +198,7 @@ listingRouter.get("/", TechnicianControllers.getAllTechnicians);
 listingRouter.get(
   "/:id",
   validateParams(idParamValidationSchema),
-  TechnicianControllers.getTechnicianById,
+  TechnicianControllers.getTechnicianById
 );
 
 export const TechnicianRoutes = router;

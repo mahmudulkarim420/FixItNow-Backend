@@ -21,6 +21,12 @@ const router = express.Router();
  *     tags: [Review]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: cookie
+ *         name: accessToken
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -28,16 +34,13 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - serviceId
- *               - technicianId
+ *               - bookingId
  *               - rating
  *             properties:
- *               serviceId:
- *                 type: string
- *               technicianId:
+ *               bookingId:
  *                 type: string
  *               rating:
- *                 type: number
+ *                 type: integer
  *               comment:
  *                 type: string
  *     responses:
@@ -48,7 +51,7 @@ router.post(
   "/",
   auth("CUSTOMER"),
   validateRequest(ReviewValidations.createReviewValidationSchema),
-  ReviewControllers.createReview,
+  ReviewControllers.createReview
 );
 
 export const ReviewRoutes = router;
