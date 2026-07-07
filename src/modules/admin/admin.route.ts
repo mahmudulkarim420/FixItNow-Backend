@@ -3,8 +3,9 @@ import { AdminControllers } from "./admin.controller";
 import { AdminValidations } from "./admin.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import validateParams from "../../middlewares/validateParams";
-import { idParamValidationSchema } from "../../validations";
+import { idParamValidationSchema, paginationQuerySchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
+import validateQuery from "../../middlewares/validateQuery";
 
 const router = express.Router();
 
@@ -33,7 +34,12 @@ const router = express.Router();
  *       200:
  *         description: List of users
  */
-router.get("/users", auth("ADMIN"), AdminControllers.getAllUsers);
+router.get(
+  "/users",
+  auth("ADMIN"),
+  validateQuery(paginationQuerySchema),
+  AdminControllers.getAllUsers,
+);
 
 /**
  * @swagger
@@ -75,7 +81,7 @@ router.patch(
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
   validateRequest(AdminValidations.toggleUserStatusValidationSchema),
-  AdminControllers.toggleUserStatus
+  AdminControllers.toggleUserStatus,
 );
 
 /**
@@ -112,7 +118,12 @@ router.patch(
  *       200:
  *         description: List of bookings
  */
-router.get("/bookings", auth("ADMIN"), AdminControllers.getAllBookings);
+router.get(
+  "/bookings",
+  auth("ADMIN"),
+  validateQuery(paginationQuerySchema),
+  AdminControllers.getAllBookings,
+);
 
 /**
  * @swagger
@@ -141,7 +152,7 @@ router.get(
   "/bookings/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  AdminControllers.getBookingById
+  AdminControllers.getBookingById,
 );
 
 /**
@@ -162,7 +173,12 @@ router.get(
  *       200:
  *         description: List of payments
  */
-router.get("/payments", auth("ADMIN"), AdminControllers.getAllPayments);
+router.get(
+  "/payments",
+  auth("ADMIN"),
+  validateQuery(paginationQuerySchema),
+  AdminControllers.getAllPayments,
+);
 
 /**
  * @swagger
@@ -191,7 +207,7 @@ router.get(
   "/payments/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  AdminControllers.getPaymentById
+  AdminControllers.getPaymentById,
 );
 
 export const AdminRoutes = router;

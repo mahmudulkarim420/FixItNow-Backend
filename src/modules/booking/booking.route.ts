@@ -3,8 +3,9 @@ import { BookingControllers } from "./booking.controller";
 import { BookingValidations } from "./booking.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import validateParams from "../../middlewares/validateParams";
-import { idParamValidationSchema } from "../../validations";
+import { idParamValidationSchema, paginationQuerySchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
+import validateQuery from "../../middlewares/validateQuery";
 
 const router = express.Router();
 
@@ -57,7 +58,7 @@ router.post(
   "/",
   auth("CUSTOMER"),
   validateRequest(BookingValidations.createBookingValidationSchema),
-  BookingControllers.createBooking
+  BookingControllers.createBooking,
 );
 
 /**
@@ -81,7 +82,8 @@ router.post(
 router.get(
   "/",
   auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
-  BookingControllers.getAllBookings
+  validateQuery(paginationQuerySchema),
+  BookingControllers.getAllBookings,
 );
 
 /**
@@ -111,7 +113,7 @@ router.get(
   "/:id",
   auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
   validateParams(idParamValidationSchema),
-  BookingControllers.getBookingById
+  BookingControllers.getBookingById,
 );
 
 /**
@@ -337,7 +339,7 @@ router.patch(
   auth("CUSTOMER"),
   validateParams(idParamValidationSchema),
   validateRequest(BookingValidations.cancelBookingValidationSchema),
-  BookingControllers.cancelBooking
+  BookingControllers.cancelBooking,
 );
 
 export const BookingRoutes = router;

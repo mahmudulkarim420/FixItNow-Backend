@@ -3,7 +3,8 @@ import { ServiceControllers } from "./service.controller";
 import { ServiceValidations } from "./service.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import validateParams from "../../middlewares/validateParams";
-import { idParamValidationSchema } from "../../validations";
+import validateQuery from "../../middlewares/validateQuery";
+import { idParamValidationSchema, paginationQuerySchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
 
 const router = express.Router();
@@ -25,7 +26,7 @@ const router = express.Router();
  *       200:
  *         description: List of services
  */
-router.get("/", ServiceControllers.getAllServices);
+router.get("/", validateQuery(paginationQuerySchema), ServiceControllers.getAllServices);
 
 /**
  * @swagger
@@ -37,7 +38,11 @@ router.get("/", ServiceControllers.getAllServices);
  *       200:
  *         description: List of categories with counts
  */
-router.get("/categories", ServiceControllers.getAllCategories);
+router.get(
+  "/categories",
+  validateQuery(paginationQuerySchema),
+  ServiceControllers.getAllCategories,
+);
 
 /**
  * @swagger
@@ -99,7 +104,7 @@ router.post(
   "/",
   auth("TECHNICIAN"),
   validateRequest(ServiceValidations.createServiceValidationSchema),
-  ServiceControllers.createService
+  ServiceControllers.createService,
 );
 
 /**
@@ -145,7 +150,7 @@ router.patch(
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
   validateRequest(ServiceValidations.updateServiceValidationSchema),
-  ServiceControllers.updateService
+  ServiceControllers.updateService,
 );
 
 /**
@@ -175,7 +180,7 @@ router.delete(
   "/:id",
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
-  ServiceControllers.deleteService
+  ServiceControllers.deleteService,
 );
 
 export const ServiceRoutes = router;

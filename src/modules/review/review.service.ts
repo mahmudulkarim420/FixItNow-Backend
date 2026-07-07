@@ -2,10 +2,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import type { TCreateReviewPayload } from "./review.validation";
 
-const createReview = async (
-  customerId: string,
-  payload: TCreateReviewPayload
-) => {
+const createReview = async (customerId: string, payload: TCreateReviewPayload) => {
   const booking = await prisma.booking.findUnique({
     where: { id: payload.bookingId },
   });
@@ -20,6 +17,14 @@ const createReview = async (
 
   if (booking.status !== "COMPLETED") {
     throw new AppError(400, "You can only leave a review after the job is COMPLETED");
+  }
+
+  const existingReview = await prisma.review.findUnique({
+    where: { bookingId: payload.bookingId },
+  });
+
+  if (existingReview) {
+    throw new AppError(409, "Review already exists for this booking!");
   }
 
   const technicianProfileId = booking.technicianProfileId;
@@ -45,8 +50,7 @@ const createReview = async (
     });
 
     const totalReviews = reviews.length;
-    const averageRating =
-      reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+    const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
 
     await tx.technicianProfile.update({
       where: { id: technicianProfileId },

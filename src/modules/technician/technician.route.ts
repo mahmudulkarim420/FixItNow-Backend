@@ -3,8 +3,9 @@ import { TechnicianControllers } from "./technician.controller";
 import { TechnicianValidations } from "./technician.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import validateParams from "../../middlewares/validateParams";
-import { idParamValidationSchema } from "../../validations";
+import { idParamValidationSchema, paginationQuerySchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
+import validateQuery from "../../middlewares/validateQuery";
 
 const router = express.Router();
 
@@ -36,7 +37,8 @@ const router = express.Router();
 router.get(
   "/bookings",
   auth("TECHNICIAN"),
-  TechnicianControllers.getTechnicianBookings
+  validateQuery(paginationQuerySchema),
+  TechnicianControllers.getTechnicianBookings,
 );
 
 /**
@@ -79,7 +81,7 @@ router.patch(
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
   validateRequest(TechnicianValidations.updateBookingStatusValidationSchema),
-  TechnicianControllers.updateBookingStatus
+  TechnicianControllers.updateBookingStatus,
 );
 
 /**
@@ -119,7 +121,7 @@ router.put(
   "/profile",
   auth("TECHNICIAN"),
   validateRequest(TechnicianValidations.updateProfileValidationSchema),
-  TechnicianControllers.updateProfile
+  TechnicianControllers.updateProfile,
 );
 
 /**
@@ -153,7 +155,7 @@ router.put(
   "/availability",
   auth("TECHNICIAN"),
   validateRequest(TechnicianValidations.updateAvailabilityValidationSchema),
-  TechnicianControllers.updateAvailability
+  TechnicianControllers.updateAvailability,
 );
 
 const listingRouter = express.Router();
@@ -177,7 +179,11 @@ const listingRouter = express.Router();
  *       200:
  *         description: List of technicians
  */
-listingRouter.get("/", TechnicianControllers.getAllTechnicians);
+listingRouter.get(
+  "/",
+  validateQuery(paginationQuerySchema),
+  TechnicianControllers.getAllTechnicians,
+);
 
 /**
  * @swagger
@@ -198,7 +204,7 @@ listingRouter.get("/", TechnicianControllers.getAllTechnicians);
 listingRouter.get(
   "/:id",
   validateParams(idParamValidationSchema),
-  TechnicianControllers.getTechnicianById
+  TechnicianControllers.getTechnicianById,
 );
 
 export const TechnicianRoutes = router;

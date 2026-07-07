@@ -1,24 +1,37 @@
 import { z } from "zod";
 
 const createBookingValidationSchema = z.object({
-  body: z.object({
-    serviceId: z.string({ message: "Service ID is required" }),
-    scheduledDate: z.string({ message: "Scheduled date is required" }).refine((val) => !isNaN(Date.parse(val)), {
-      message: "Invalid scheduled date",
-    }),
-    timeSlot: z.string({ message: "Time slot is required" }),
-    contactNumber: z.string({ message: "Contact number is required" }),
-  }),
+  body: z
+    .object({
+      serviceId: z
+        .string({ message: "Service ID is required" })
+        .uuid({ message: "Invalid Service ID format" }),
+      scheduledDate: z
+        .string({ message: "Scheduled date is required" })
+        .datetime({ message: "Invalid scheduled date format, must be ISO 8601" }),
+      timeSlot: z
+        .string({ message: "Time slot is required" })
+        .trim()
+        .min(1, "Time slot cannot be empty"),
+      contactNumber: z
+        .string({ message: "Contact number is required" })
+        .trim()
+        .min(1, "Contact number cannot be empty"),
+    })
+    .strict(),
 });
 
 export type TCreateBookingPayload = z.infer<typeof createBookingValidationSchema>["body"];
 
 const cancelBookingValidationSchema = z.object({
-  body: z.object({
-    reason: z
-      .string({ message: "Cancellation reason is required" })
-      .min(1, "Cancellation reason is required"),
-  }),
+  body: z
+    .object({
+      reason: z
+        .string({ message: "Cancellation reason is required" })
+        .trim()
+        .min(1, "Cancellation reason cannot be empty"),
+    })
+    .strict(),
 });
 
 export type TCancelBookingPayload = z.infer<typeof cancelBookingValidationSchema>["body"];

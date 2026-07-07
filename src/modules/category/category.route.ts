@@ -3,8 +3,9 @@ import { CategoryControllers } from "./category.controller";
 import { CategoryValidations } from "./category.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import validateParams from "../../middlewares/validateParams";
-import { idParamValidationSchema } from "../../validations";
+import { idParamValidationSchema, paginationQuerySchema } from "../../validations";
 import { auth } from "../../middlewares/auth";
+import validateQuery from "../../middlewares/validateQuery";
 
 const router = express.Router();
 
@@ -33,7 +34,12 @@ const router = express.Router();
  *       200:
  *         description: List of categories
  */
-router.get("/", auth("ADMIN"), CategoryControllers.getAllCategoriesAdmin);
+router.get(
+  "/",
+  auth("ADMIN"),
+  validateQuery(paginationQuerySchema),
+  CategoryControllers.getAllCategoriesAdmin,
+);
 
 /**
  * @swagger
@@ -70,7 +76,7 @@ router.post(
   "/",
   auth("ADMIN"),
   validateRequest(CategoryValidations.createCategoryValidationSchema),
-  CategoryControllers.createCategory
+  CategoryControllers.createCategory,
 );
 
 /**
@@ -112,7 +118,7 @@ router.patch(
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
   validateRequest(CategoryValidations.updateCategoryValidationSchema),
-  CategoryControllers.updateCategory
+  CategoryControllers.updateCategory,
 );
 
 /**
@@ -142,7 +148,7 @@ router.delete(
   "/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  CategoryControllers.deleteCategory
+  CategoryControllers.deleteCategory,
 );
 
 export const CategoryRoutes = router;
