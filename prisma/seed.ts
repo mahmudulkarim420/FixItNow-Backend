@@ -1,9 +1,10 @@
 import { prisma } from '../src/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-async function main() {
-  console.log('Clearing existing data...');
-  // Delete all existing data to prevent duplicates on multiple runs
+const SEED_PASSWORD = 'password123';
+
+// Delete all application data in reverse dependency order to avoid FK errors.
+async function cleanDatabase() {
   await prisma.payment.deleteMany();
   await prisma.review.deleteMany();
   await prisma.booking.deleteMany();
@@ -11,223 +12,91 @@ async function main() {
   await prisma.category.deleteMany();
   await prisma.technicianProfile.deleteMany();
   await prisma.user.deleteMany();
+}
 
-  console.log('Seeding database...');
+async function main() {
+  console.log('Cleaning existing application data...');
+  await cleanDatabase();
 
-  // Hash password
-  const password = await bcrypt.hash('password123', 10);
+  console.log('Inserting fresh seed data...');
+  const password = await bcrypt.hash(SEED_PASSWORD, 10);
 
-  // 1. Create Categories
-  const catPlumbing = await prisma.category.create({
-    data: {
-      name: 'Plumbing',
-      description: 'Expert plumbing services including leaks, installations, and repairs.',
-    },
+  const adminData = {
+    name: 'Admin',
+    password,
+    role: 'ADMIN' as const,
+    status: 'ACTIVE' as const,
+  };
+  await prisma.user.upsert({
+    where: { email: 'admin@gmail.com' },
+    update: adminData,
+    create: { email: 'admin@gmail.com', ...adminData },
   });
 
-  const catElectrical = await prisma.category.create({
-    data: {
-      name: 'Electrical',
-      description: 'Professional electrical installations, repairs, and maintenance.',
-    },
+  const customerData = {
+    name: 'Customer',
+    password,
+    role: 'CUSTOMER' as const,
+    status: 'ACTIVE' as const,
+  };
+  await prisma.user.upsert({
+    where: { email: 'customer@gmail.com' },
+    update: customerData,
+    create: { email: 'customer@gmail.com', ...customerData },
   });
 
-  const catCleaning = await prisma.category.create({
-    data: {
-      name: 'Cleaning',
-      description: 'Deep cleaning, regular housekeeping, and move-out cleaning.',
-    },
+  const technicianData = {
+    name: 'Technician',
+    password,
+    role: 'TECHNICIAN' as const,
+    status: 'ACTIVE' as const,
+  };
+  const technician = await prisma.user.upsert({
+    where: { email: 'technician@gmail.com' },
+    update: technicianData,
+    create: { email: 'technician@gmail.com', ...technicianData },
   });
 
-  // 2. Create Admin
-  await prisma.user.create({
-    data: {
-      name: 'Admin User',
-      email: 'admin@fixitnow.com',
-      password,
-      role: 'ADMIN',
-      status: 'ACTIVE',
-    },
+  const profileData = {
+    bio: 'Certified technician for general home repairs.',
+    skills: ['Plumbing', 'Electrical', 'Cleaning'],
+    experience: 5,
+    hourlyRate: 40.0,
+    location: 'Dhaka, Bangladesh',
+    totalReviews: 0,
+    averageRating: 0,
+    availability: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] },
+    isVerified: true,
+  };
+  const technicianProfile = await prisma.technicianProfile.upsert({
+    where: { userId: technician.id },
+    update: profileData,
+    create: { userId: technician.id, ...profileData },
   });
 
-  // 3. Create Customers
-  const customer1 = await prisma.user.create({
-    data: {
-      name: 'John Doe',
-      email: 'john@example.com',
-      password,
-      role: 'CUSTOMER',
-      status: 'ACTIVE',
-    },
+  const categoryData = {
+    description: 'General home repair and maintenance services.',
+  };
+  const category = await prisma.category.upsert({
+    where: { name: 'Home Repair' },
+    update: categoryData,
+    create: { name: 'Home Repair', ...categoryData },
   });
 
-  const customer2 = await prisma.user.create({
+  // Service has no natural unique key; safe to create because the table was wiped above.
+  await prisma.service.create({
     data: {
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      password,
-      role: 'CUSTOMER',
-      status: 'ACTIVE',
-    },
-  });
-
-  // 4. Create Technicians with Profiles
-  const tech1 = await prisma.user.create({
-    data: {
-      name: 'Mike Builder',
-      email: 'mike@example.com',
-      password,
-      role: 'TECHNICIAN',
-      status: 'ACTIVE',
-      technicianProfile: {
-        create: {
-          bio: 'Experienced plumber with 10 years of fixing pipes.',
-          skills: ['Pipe Fitting', 'Leak Repair', 'Water Heaters'],
-          experience: 10,
-          hourlyRate: 50.0,
-          location: 'New York, NY',
-          totalReviews: 1,
-          availability: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] },
-          isVerified: true,
-        },
-      },
-    },
-    include: {
-      technicianProfile: true,
-    },
-  });
-
-  const tech2 = await prisma.user.create({
-    data: {
-      name: 'Sarah Spark',
-      email: 'sarah@example.com',
-      password,
-      role: 'TECHNICIAN',
-      status: 'ACTIVE',
-      technicianProfile: {
-        create: {
-          bio: 'Licensed electrician ready to help with your wiring needs.',
-          skills: ['Wiring', 'Lighting', 'Panel Upgrades'],
-          experience: 8,
-          hourlyRate: 65.0,
-          location: 'Brooklyn, NY',
-          totalReviews: 1,
-          availability: { days: ['Wednesday', 'Thursday', 'Friday', 'Saturday'] },
-          isVerified: true,
-        },
-      },
-    },
-    include: {
-      technicianProfile: true,
-    },
-  });
-
-  // 5. Create Services
-  const service1 = await prisma.service.create({
-    data: {
-      title: 'Fix Leaking Pipe',
-      description: 'Quick and reliable repair for leaking pipes.',
-      price: 100.0,
-      categoryId: catPlumbing.id,
-      technicianProfileId: tech1.technicianProfile!.id,
-    },
-  });
-
-  const service2 = await prisma.service.create({
-    data: {
-      title: 'Install Ceiling Fan',
-      description: 'Safe and professional installation of any ceiling fan.',
-      price: 150.0,
-      categoryId: catElectrical.id,
-      technicianProfileId: tech2.technicianProfile!.id,
-    },
-  });
-
-  const service3 = await prisma.service.create({
-    data: {
-      title: 'Water Heater Replacement',
-      description: 'Full replacement and installation of your water heater.',
-      price: 450.0,
-      categoryId: catPlumbing.id,
-      technicianProfileId: tech1.technicianProfile!.id,
-    },
-  });
-
-  // 6. Create Bookings
-  const booking1 = await prisma.booking.create({
-    data: {
-      customerId: customer1.id,
-      serviceId: service1.id,
-      technicianProfileId: tech1.technicianProfile!.id,
-      servicePrice: service1.price,
-      contactNumber: '+1234567890',
-      scheduledDate: new Date('2026-08-01'),
-      timeSlot: '10:00 AM - 12:00 PM',
-      status: 'COMPLETED',
-    },
-  });
-
-  const booking2 = await prisma.booking.create({
-    data: {
-      customerId: customer2.id,
-      serviceId: service2.id,
-      technicianProfileId: tech2.technicianProfile!.id,
-      servicePrice: service2.price,
-      contactNumber: '+0987654321',
-      scheduledDate: new Date('2026-08-02'),
-      timeSlot: '02:00 PM - 04:00 PM',
-      status: 'PAID',
-    },
-  });
-
-  const booking3 = await prisma.booking.create({
-    data: {
-      customerId: customer1.id,
-      serviceId: service3.id,
-      technicianProfileId: tech1.technicianProfile!.id,
-      servicePrice: service3.price,
-      contactNumber: '+1234567890',
-      scheduledDate: new Date('2026-08-05'),
-      timeSlot: '09:00 AM - 11:00 PM',
-      status: 'REQUESTED',
-    },
-  });
-
-  // 7. Create Reviews (for completed bookings)
-  await prisma.review.create({
-    data: {
-      bookingId: booking1.id,
-      customerId: customer1.id,
-      technicianProfileId: tech1.technicianProfile!.id,
-      rating: 5,
-      comment: 'Mike did a fantastic job fixing the pipe quickly!',
-    },
-  });
-
-  // 8. Create Payments (for paid/completed bookings)
-  await prisma.payment.create({
-    data: {
-      bookingId: booking1.id,
-      amount: service1.price,
-      transactionId: 'TXN-123456-PLB',
-      provider: 'Stripe',
-      status: 'COMPLETED',
-      paidAt: new Date(),
-    },
-  });
-
-  await prisma.payment.create({
-    data: {
-      bookingId: booking2.id,
-      amount: service2.price,
-      transactionId: 'TXN-789012-ELE',
-      provider: 'PayPal',
-      status: 'COMPLETED',
-      paidAt: new Date(),
+      title: 'General Home Repair Service',
+      description:
+        'A general-purpose home repair service covering plumbing, electrical, and cleaning tasks.',
+      price: 120.0,
+      categoryId: category.id,
+      technicianProfileId: technicianProfile.id,
     },
   });
 
   console.log('Database seeded successfully!');
+  console.log(`Login password for all users: ${SEED_PASSWORD}`);
 }
 
 main()
