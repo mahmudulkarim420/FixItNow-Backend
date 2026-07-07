@@ -13,19 +13,25 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 const app = express();
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(
   "/api/payments/webhook",
   express.raw({ type: "application/json" }),
-  PaymentControllers.stripeWebhook
+  PaymentControllers.stripeWebhook,
 );
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
 app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());

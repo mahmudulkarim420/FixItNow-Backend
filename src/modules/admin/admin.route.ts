@@ -8,30 +8,137 @@ import { auth } from "../../middlewares/auth";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Admin
+ *   description: Admin operations
+ */
+
+/**
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
 router.get("/users", auth("ADMIN"), AdminControllers.getAllUsers);
 
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   patch:
+ *     summary: Toggle user status
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, BLOCKED]
+ *     responses:
+ *       200:
+ *         description: User status updated
+ */
 router.patch(
   "/users/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
   validateRequest(AdminValidations.toggleUserStatusValidationSchema),
-  AdminControllers.toggleUserStatus
+  AdminControllers.toggleUserStatus,
 );
 
+/**
+ * @swagger
+ * /api/admin/bookings:
+ *   get:
+ *     summary: Get all bookings
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all bookings
+ */
 router.get("/bookings", auth("ADMIN"), AdminControllers.getAllBookings);
+/**
+ * @swagger
+ * /api/admin/bookings/{id}:
+ *   get:
+ *     summary: Get booking by ID
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Booking details retrieved
+ */
 router.get(
   "/bookings/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  AdminControllers.getBookingById
+  AdminControllers.getBookingById,
 );
 
+/**
+ * @swagger
+ * /api/admin/payments:
+ *   get:
+ *     summary: Get all payments
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all payments
+ */
 router.get("/payments", auth("ADMIN"), AdminControllers.getAllPayments);
+/**
+ * @swagger
+ * /api/admin/payments/{id}:
+ *   get:
+ *     summary: Get payment by ID
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment details retrieved
+ */
 router.get(
   "/payments/:id",
   auth("ADMIN"),
   validateParams(idParamValidationSchema),
-  AdminControllers.getPaymentById
+  AdminControllers.getPaymentById,
 );
 
 export const AdminRoutes = router;

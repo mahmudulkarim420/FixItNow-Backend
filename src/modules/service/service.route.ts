@@ -8,34 +8,153 @@ import { auth } from "../../middlewares/auth";
 
 const router = express.Router();
 
-router.get("/", ServiceControllers.getAllServices);
-router.get("/categories", ServiceControllers.getAllCategories);
-router.get(
-  "/:id",
-  validateParams(idParamValidationSchema),
-  ServiceControllers.getServiceById
-);
+/**
+ * @swagger
+ * tags:
+ *   name: Service
+ *   description: Service operations
+ */
 
+/**
+ * @swagger
+ * /api/services:
+ *   get:
+ *     summary: Get all services
+ *     tags: [Service]
+ *     responses:
+ *       200:
+ *         description: List of services
+ */
+router.get("/", ServiceControllers.getAllServices);
+/**
+ * @swagger
+ * /api/services/categories:
+ *   get:
+ *     summary: Get all service categories
+ *     tags: [Service]
+ *     responses:
+ *       200:
+ *         description: List of categories
+ */
+router.get("/categories", ServiceControllers.getAllCategories);
+
+/**
+ * @swagger
+ * /api/services/{id}:
+ *   get:
+ *     summary: Get service by ID
+ *     tags: [Service]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Service details
+ */
+router.get("/:id", validateParams(idParamValidationSchema), ServiceControllers.getServiceById);
+
+/**
+ * @swagger
+ * /api/services:
+ *   post:
+ *     summary: Create a service
+ *     tags: [Service]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - categoryId
+ *               - name
+ *               - price
+ *             properties:
+ *               categoryId:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Service created
+ */
 router.post(
   "/",
   auth("TECHNICIAN"),
   validateRequest(ServiceValidations.createServiceValidationSchema),
-  ServiceControllers.createService
+  ServiceControllers.createService,
 );
 
+/**
+ * @swagger
+ * /api/services/{id}:
+ *   patch:
+ *     summary: Update a service
+ *     tags: [Service]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Service updated
+ */
 router.patch(
   "/:id",
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
   validateRequest(ServiceValidations.updateServiceValidationSchema),
-  ServiceControllers.updateService
+  ServiceControllers.updateService,
 );
 
+/**
+ * @swagger
+ * /api/services/{id}:
+ *   delete:
+ *     summary: Delete a service
+ *     tags: [Service]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Service deleted
+ */
 router.delete(
   "/:id",
   auth("TECHNICIAN"),
   validateParams(idParamValidationSchema),
-  ServiceControllers.deleteService
+  ServiceControllers.deleteService,
 );
 
 export const ServiceRoutes = router;
