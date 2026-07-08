@@ -7,8 +7,8 @@ const createBookingValidationSchema = z.object({
         .string({ message: "Service ID is required" })
         .uuid({ message: "Invalid Service ID format" }),
       scheduledDate: z
-        .string({ message: "Scheduled date is required" })
-        .datetime({ message: "Invalid scheduled date format, must be ISO 8601" }),
+        .string()
+        .date({ message: "Invalid date format. Use YYYY-MM-DD" }),
       timeSlot: z
         .string({ message: "Time slot is required" })
         .trim()
