@@ -94,8 +94,12 @@ router.post(
  *             properties:
  *               name:
  *                 type: string
- *               iconUrl:
+ *                 description: Category name (min 1 char)
+ *                 example: Plumbing
+ *               description:
  *                 type: string
+ *                 description: Category description
+ *                 example: Plumbing repair and installation services
  *     responses:
  *       200:
  *         description: Category updated
