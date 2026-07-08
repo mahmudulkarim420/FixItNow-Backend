@@ -10,6 +10,7 @@ import { AdminRoutes } from "./modules/admin/admin.route";
 import { CategoryRoutes } from "./modules/category/category.route";
 import AppError from "./utils/AppError";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
+import config from "./config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
@@ -77,7 +78,7 @@ app.use(
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [config.frontendUrl, config.backendUrl].filter(Boolean),
     credentials: true,
   }),
 );
