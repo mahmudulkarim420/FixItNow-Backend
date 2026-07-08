@@ -54,8 +54,12 @@ router.get(
  *             properties:
  *               name:
  *                 type: string
- *               iconUrl:
+ *                 description: Category name (min 1 char)
+ *                 example: Plumbing
+ *               description:
  *                 type: string
+ *                 description: Category description (optional)
+ *                 example: Plumbing repair and installation services
  *     responses:
  *       201:
  *         description: Category created
