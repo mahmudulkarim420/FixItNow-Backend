@@ -11,8 +11,8 @@ const options = {
     },
     servers: [
       {
-        url: `http://localhost:${config.port}`,
-        description: "Development server",
+        url: config.backendUrl || `http://localhost:${config.port}`,
+        description: "API Server",
       },
     ],
     components: {
