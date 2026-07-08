@@ -209,16 +209,12 @@ router.post("/logout", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), AuthControllers.
  *     summary: Refresh token
  *     description: Issues a new access token and rotates the refresh token using the refreshToken cookie.
  *     tags: [Auth]
- *     parameters:
- *       - in: cookie
- *         name: refreshToken
- *         schema:
- *           type: string
- *         required: true
- *         description: JWT refresh token
+ *     security:
+ *       - cookieAuth: []
+ *         description: JWT refresh token (HTTP-only)
  *     responses:
  *       200:
- *         description: Token refreshed successfully
+ *         description: Access token refreshed successfully
  *         headers:
  *           Set-Cookie:
  *             description: New accessToken and refreshToken cookies
@@ -229,8 +225,9 @@ router.post("/logout", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), AuthControllers.
  *             example:
  *               success: true
  *               statusCode: 200
- *               message: "Token refreshed successfully"
- *               data: null
+ *               message: "Access token refreshed successfully!"
+ *               data:
+ *                 refreshed: true
  *       401:
  *         description: Refresh token missing, invalid, or expired
  *       403:
