@@ -23,13 +23,7 @@ const router = express.Router();
  *     summary: Get technician's bookings
  *     tags: [Technician]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: List of bookings
@@ -48,18 +42,13 @@ router.get(
  *     summary: Update booking status
  *     tags: [Technician]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -91,13 +80,7 @@ router.patch(
  *     summary: Update technician profile
  *     tags: [Technician]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -131,13 +114,7 @@ router.put(
  *     summary: Update availability
  *     tags: [Technician]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:

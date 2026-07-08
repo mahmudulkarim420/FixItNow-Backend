@@ -28,13 +28,7 @@ const router = express.Router();
  *       On successful payment, the Stripe webhook marks the booking as `PAID`.
  *     tags: [Payment]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -91,13 +85,7 @@ router.post(
  *     summary: Get payment history
  *     tags: [Payment]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: Payment history retrieved
@@ -116,18 +104,13 @@ router.get(
  *     summary: Get payment by ID
  *     tags: [Payment]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Payment details

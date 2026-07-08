@@ -23,13 +23,7 @@ const router = express.Router();
  *     summary: Get all users
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: List of users
@@ -48,18 +42,13 @@ router.get(
  *     summary: Toggle user status
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -91,13 +80,7 @@ router.patch(
  *     summary: Get all bookings
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *       - in: query
  *         name: page
  *         schema:
@@ -132,18 +115,13 @@ router.get(
  *     summary: Get booking by ID
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Booking details retrieved
@@ -162,13 +140,7 @@ router.get(
  *     summary: Get all payments
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: List of payments
@@ -187,18 +159,13 @@ router.get(
  *     summary: Get payment by ID
  *     tags: [Admin]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Payment details retrieved

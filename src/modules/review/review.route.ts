@@ -20,13 +20,7 @@ const router = express.Router();
  *     summary: Create a review
  *     tags: [Review]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:

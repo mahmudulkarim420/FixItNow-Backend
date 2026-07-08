@@ -151,13 +151,7 @@ router.post(
  *     description: Returns the currently authenticated user's profile based on the accessToken cookie.
  *     tags: [Auth]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *         description: JWT access token (HTTP-only)
  *     responses:
  *       200:
@@ -188,13 +182,7 @@ router.get("/me", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), AuthControllers.getMe
  *     description: Clears the accessToken and refreshToken HTTP-only cookies.
  *     tags: [Auth]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *         description: JWT access token
  *     responses:
  *       200:

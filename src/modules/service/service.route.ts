@@ -69,13 +69,7 @@ router.get("/:id", validateParams(idParamValidationSchema), ServiceControllers.g
  *     summary: Create a service
  *     tags: [Service]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -114,18 +108,13 @@ router.post(
  *     summary: Update a service
  *     tags: [Service]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     requestBody:
  *       required: false
  *       content:
@@ -160,18 +149,13 @@ router.patch(
  *     summary: Delete a service
  *     tags: [Service]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Service deleted

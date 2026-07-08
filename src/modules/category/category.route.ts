@@ -23,13 +23,7 @@ const router = express.Router();
  *     summary: Get all categories
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: List of categories
@@ -48,13 +42,7 @@ router.get(
  *     summary: Create a category
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -86,18 +74,13 @@ router.post(
  *     summary: Update a category
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     requestBody:
  *       required: false
  *       content:
@@ -128,18 +111,13 @@ router.patch(
  *     summary: Delete a category
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Category deleted

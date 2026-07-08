@@ -23,13 +23,7 @@ const router = express.Router();
  *     summary: Create a booking
  *     tags: [Booking]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -68,13 +62,7 @@ router.post(
  *     summary: Get all bookings
  *     tags: [Booking]
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: List of bookings
@@ -93,18 +81,13 @@ router.get(
  *     summary: Get booking by ID
  *     tags: [Booking]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Booking details
@@ -134,7 +117,7 @@ router.get(
  *       - CANCELLED: already cancelled (400).
  *     tags: [Booking]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -142,11 +125,6 @@ router.get(
  *         schema:
  *           type: string
  *         description: ID of the booking to cancel.
- *       - in: cookie
- *         name: accessToken
- *         schema:
- *           type: string
- *         required: true
  *     requestBody:
  *       required: true
  *       content:
