@@ -112,6 +112,7 @@ router.put(
  * /api/technician/availability:
  *   put:
  *     summary: Update availability
+ *     description: Updates the technician's weekly availability. The availability object maps day names to arrays of time slots.
  *     tags: [Technician]
  *     security:
  *       - cookieAuth: []
@@ -121,12 +122,51 @@ router.put(
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - availability
  *             properties:
  *               availability:
  *                 type: object
+ *                 description: Map of day names to arrays of available time slots
+ *                 additionalProperties:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *             example:
+ *               availability:
+ *                 monday: ["09:00-12:00", "14:00-18:00"]
+ *                 tuesday: ["09:00-12:00", "14:00-18:00"]
+ *                 wednesday: ["09:00-12:00"]
+ *                 thursday: ["14:00-18:00"]
+ *                 friday: ["09:00-12:00", "14:00-18:00"]
+ *                 saturday: ["10:00-15:00"]
+ *                 sunday: []
  *     responses:
  *       200:
- *         description: Availability updated
+ *         description: Availability updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               statusCode: 200
+ *               message: "Availability updated successfully!"
+ *               data:
+ *                 id: "uuid"
+ *                 userId: "uuid"
+ *                 availability:
+ *                   monday: ["09:00-12:00", "14:00-18:00"]
+ *                   tuesday: ["09:00-12:00", "14:00-18:00"]
+ *                   wednesday: ["09:00-12:00"]
+ *                   thursday: ["14:00-18:00"]
+ *                   friday: ["09:00-12:00", "14:00-18:00"]
+ *                   saturday: ["10:00-15:00"]
+ *                   sunday: []
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized / Token missing or invalid
+ *       404:
+ *         description: Technician profile not found
  */
 router.put(
   "/availability",
