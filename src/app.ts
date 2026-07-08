@@ -29,47 +29,6 @@ app.use(
   }),
 );
 
-/**
- * @swagger
- * /api/payments/webhook:
- *   post:
- *     summary: Stripe webhook endpoint
- *     description: |
- *       Receives Stripe webhook events. Registered **before** `express.json()`
- *       so it receives the raw body for signature verification against
- *       `STRIPE_WEBHOOK_SECRET`.
- *
- *       Handled events:
- *       - `checkout.session.completed` → marks the booking as `PAID`, stores the
- *         Payment Intent / transaction ID, and is idempotent (duplicate events
- *         for an already-completed payment are ignored). Only fires when
- *         `payment_status` is `paid`.
- *       - `checkout.session.async_payment_succeeded` → same handling as
- *         `checkout.session.completed` for delayed-payment methods (e.g. bank
- *         transfers) that settle after the session is created.
- *       - `checkout.session.async_payment_failed` → marks the payment as `FAILED`.
- *       - `charge.refunded` → marks the payment as `REFUNDED` and the booking as `CANCELLED`.
- *     tags: [Payment]
- *     parameters:
- *       - in: header
- *         name: stripe-signature
- *         schema:
- *           type: string
- *         required: true
- *         description: Stripe webhook signature
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: string
- *             description: Raw Stripe event payload (not parsed as JSON)
- *     responses:
- *       200:
- *         description: Webhook received successfully
- *       400:
- *         description: Missing/invalid signature or verification failed
- */
 app.use(
   "/api/payments/webhook",
   express.raw({ type: "application/json" }),
