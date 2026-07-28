@@ -120,24 +120,24 @@ git https://github.com/mahmudulkarim420/FixItNow-Backend.git
 cd FixItNow-Backend
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Create your environment file
 cp .env.example .env
 #   then fill in the values (see Environment Variables below)
 
 # 4. Generate the Prisma client
-npx prisma generate
+pnpm exec prisma generate
 
 # 5. Run migrations
-npx prisma migrate deploy
-#   (use `npx prisma migrate dev` in development)
+pnpm exec prisma migrate deploy
+#   (use `pnpm exec prisma migrate dev` in development)
 
 # 6. (Optional) Seed the database
-npx prisma db seed
+pnpm exec prisma db seed
 
 # 7. Start the development server
-npm run dev
+pnpm dev
 ```
 
 The server starts on `http://localhost:5000`.
@@ -180,19 +180,19 @@ This project uses Prisma's **multi-file schema** feature — the schema is split
 
 ```bash
 # Generate the Prisma client (after schema changes)
-npx prisma generate
+pnpm exec prisma generate
 
 # Create & apply a new migration in development
-npx prisma migrate dev --name <migration_name>
+pnpm exec prisma migrate dev --name <migration_name>
 
 # Apply existing migrations in production
-npx prisma migrate deploy
+pnpm exec prisma migrate deploy
 
 # Seed the database
-npx prisma db seed
+pnpm exec prisma db seed
 
 # Open Prisma Studio
-npx prisma studio
+pnpm exec prisma studio
 ```
 
 ---
@@ -201,10 +201,10 @@ npx prisma studio
 
 | Script             | Description                                                        |
 | ------------------ | ------------------------------------------------------------------ |
-| `npm run dev`      | Start the dev server with hot-reload (`tsx watch`)                 |
-| `npm run build`    | Compile TypeScript + bundle with esbuild to `dist/server.js`       |
-| `npm start`        | Run the production build (`node dist/server.js`)                   |
-| `npm run stripe:webhook` | Forward Stripe CLI webhooks to the local server              |
+| `pnpm dev`         | Start the dev server with hot-reload (`tsx watch`)                 |
+| `pnpm build`       | Compile TypeScript + bundle with esbuild to `dist/server.js`       |
+| `pnpm start`       | Run the production build (`node dist/server.js`)                   |
+| `pnpm stripe:webhook` | Forward Stripe CLI webhooks to the local server                 |
 
 ---
 
@@ -339,7 +339,7 @@ Handled webhook events:
 To test webhooks locally:
 
 ```bash
-npm run stripe:webhook
+pnpm stripe:webhook
 ```
 
 This forwards Stripe CLI events to `http://localhost:5000/api/payments/webhook`.

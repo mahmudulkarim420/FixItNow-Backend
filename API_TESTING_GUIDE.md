@@ -48,10 +48,10 @@ A complete reference for testing every API endpoint in the FixItNow-Backend proj
 2. Install dependencies, run migrations, and seed the database:
 
    ```bash
-   npm install
-   npx prisma migrate deploy
-   npx prisma db seed
-   npm run dev
+   pnpm install
+   pnpm exec prisma migrate deploy
+   pnpm exec prisma db seed
+   pnpm dev
    ```
 
 3. The server runs at `http://localhost:5000` (default `PORT=5000`).
