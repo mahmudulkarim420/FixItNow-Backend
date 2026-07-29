@@ -134,40 +134,38 @@ const markBookingPaid = async (session: Stripe.Checkout.Session) => {
 
   const amount = (session.amount_total ?? 0) / 100;
 
-  await prisma.$transaction(async (tx) => {
-    const existingPayment = await tx.payment.findUnique({
-      where: { bookingId },
-    });
+  const existingPayment = await prisma.payment.findUnique({
+    where: { bookingId },
+  });
 
-    if (existingPayment && existingPayment.status === "COMPLETED") {
-      return;
-    }
+  if (existingPayment && existingPayment.status === "COMPLETED") {
+    return;
+  }
 
-    await tx.payment.upsert({
-      where: { bookingId },
-      create: {
-        bookingId,
-        amount,
-        transactionId: paymentIntentId ?? session.id,
-        provider: "STRIPE",
-        status: "COMPLETED",
-        stripeCheckoutSessionId: session.id,
-        paidAt: new Date(),
-      },
-      update: {
-        amount,
-        transactionId: paymentIntentId ?? session.id,
-        provider: "STRIPE",
-        status: "COMPLETED",
-        stripeCheckoutSessionId: session.id,
-        paidAt: new Date(),
-      },
-    });
+  await prisma.payment.upsert({
+    where: { bookingId },
+    create: {
+      bookingId,
+      amount,
+      transactionId: paymentIntentId ?? session.id,
+      provider: "STRIPE",
+      status: "COMPLETED",
+      stripeCheckoutSessionId: session.id,
+      paidAt: new Date(),
+    },
+    update: {
+      amount,
+      transactionId: paymentIntentId ?? session.id,
+      provider: "STRIPE",
+      status: "COMPLETED",
+      stripeCheckoutSessionId: session.id,
+      paidAt: new Date(),
+    },
+  });
 
-    await tx.booking.update({
-      where: { id: bookingId },
-      data: { status: "PAID" },
-    });
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "PAID" },
   });
 };
 

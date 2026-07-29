@@ -19,7 +19,7 @@ const createBooking = async (
     throw new AppError(404, "Service not found!");
   }
 
-  const result = await prisma.booking.create({
+  const created = await prisma.booking.create({
     data: {
       customerId,
       serviceId: payload.serviceId,
@@ -30,6 +30,10 @@ const createBooking = async (
       timeSlot: payload.timeSlot,
       status: "REQUESTED",
     },
+  });
+
+  const result = await prisma.booking.findUnique({
+    where: { id: created.id },
     include: {
       service: true,
       customer: { select: { name: true, email: true } },
@@ -87,7 +91,7 @@ const getBookingById = async (bookingId: string, userId: string, role: string) =
   }
 
   const isOwner =
-    role === "ADMIN" || result.customerId === userId || result.technicianProfile.userId === userId;
+    role === "ADMIN" || result.customerId === userId || result.technicianProfile?.userId === userId;
 
   if (!isOwner) {
     throw new AppError(403, "You are not authorized to view this booking!");
@@ -135,24 +139,22 @@ const cancelBooking = async (bookingId: string, userId: string, reason: string) 
     });
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    if (completedPayment) {
-      await tx.payment.update({
-        where: { bookingId },
-        data: { status: "REFUNDED" },
-      });
-    }
-
-    return tx.booking.update({
-      where: { id: bookingId },
-      data: { status: "CANCELLED", cancellationReason: reason },
-      include: {
-        service: true,
-        customer: { select: { name: true, email: true } },
-        technicianProfile: { include: { user: { select: { name: true } } } },
-        payment: true,
-      },
+  if (completedPayment) {
+    await prisma.payment.update({
+      where: { bookingId },
+      data: { status: "REFUNDED" },
     });
+  }
+
+  const result = await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "CANCELLED", cancellationReason: reason },
+    include: {
+      service: true,
+      customer: { select: { name: true, email: true } },
+      technicianProfile: { include: { user: { select: { name: true } } } },
+      payment: true,
+    },
   });
 
   return result;

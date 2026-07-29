@@ -29,38 +29,34 @@ const createReview = async (customerId: string, payload: TCreateReviewPayload) =
 
   const technicianProfileId = booking.technicianProfileId;
 
-  const result = await prisma.$transaction(async (tx) => {
-    const review = await tx.review.create({
-      data: {
-        bookingId: payload.bookingId,
-        customerId,
-        technicianProfileId,
-        rating: payload.rating,
-        comment: payload.comment,
-      },
-      include: {
-        customer: { select: { name: true, email: true } },
-        technicianProfile: { select: { id: true } },
-      },
-    });
-
-    const reviews = await tx.review.findMany({
-      where: { technicianProfileId },
-      select: { rating: true },
-    });
-
-    const totalReviews = reviews.length;
-    const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
-
-    await tx.technicianProfile.update({
-      where: { id: technicianProfileId },
-      data: { totalReviews, averageRating },
-    });
-
-    return review;
+  const review = await prisma.review.create({
+    data: {
+      bookingId: payload.bookingId,
+      customerId,
+      technicianProfileId,
+      rating: payload.rating,
+      comment: payload.comment,
+    },
+    include: {
+      customer: { select: { name: true, email: true } },
+      technicianProfile: { select: { id: true } },
+    },
   });
 
-  return result;
+  const reviews = await prisma.review.findMany({
+    where: { technicianProfileId },
+    select: { rating: true },
+  });
+
+  const totalReviews = reviews.length;
+  const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+
+  await prisma.technicianProfile.update({
+    where: { id: technicianProfileId },
+    data: { totalReviews, averageRating },
+  });
+
+  return review;
 };
 
 export const ReviewServices = {
