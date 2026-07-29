@@ -176,6 +176,104 @@ router.get("/me", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), AuthControllers.getMe
 
 /**
  * @swagger
+ * /api/auth/me:
+ *   patch:
+ *     summary: Update current user profile
+ *     description: Updates the authenticated user's profile information (name, email, password, bio, skills, experience, hourlyRate, location).
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Johnathan Doe
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john.updated@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: newsecret123
+ *               bio:
+ *                 type: string
+ *                 example: Experienced credit restoration specialist.
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["Credit Repair", "Score Monitoring"]
+ *               experience:
+ *                 type: number
+ *                 example: 5
+ *               hourlyRate:
+ *                 type: number
+ *                 example: 75
+ *               location:
+ *                 type: string
+ *                 example: New York, NY
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               statusCode: 200
+ *               message: "Profile updated successfully!"
+ *               data:
+ *                 id: "uuid"
+ *                 name: "Johnathan Doe"
+ *                 email: "john.updated@example.com"
+ *                 role: "CUSTOMER"
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       409:
+ *         description: Email is already taken
+ */
+router.patch(
+  "/me",
+  auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
+  validateRequest(AuthValidations.updateProfileValidationSchema),
+  AuthControllers.updateProfile
+);
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   delete:
+ *     summary: Delete current user profile
+ *     description: Deletes the authenticated user's account and clears auth cookies.
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User account deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               statusCode: 200
+ *               message: "User account deleted successfully!"
+ *               data: null
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.delete("/me", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), AuthControllers.deleteProfile);
+
+/**
+ * @swagger
  * /api/auth/logout:
  *   post:
  *     summary: Logout user

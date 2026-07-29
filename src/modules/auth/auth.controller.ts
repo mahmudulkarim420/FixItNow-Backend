@@ -96,10 +96,44 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthServices.updateProfile(req.user!.id, req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Profile updated successfully!",
+    data: result,
+  });
+});
+
+const deleteProfile = catchAsync(async (req: Request, res: Response) => {
+  await AuthServices.deleteProfile(req.user!.id);
+
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "User account deleted successfully!",
+    data: null,
+  });
+});
+
 export const AuthControllers = {
   registerUser,
   loginUser,
   getMe,
   logout,
   refreshToken,
+  updateProfile,
+  deleteProfile,
 };
