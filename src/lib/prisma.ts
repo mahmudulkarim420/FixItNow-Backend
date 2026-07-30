@@ -4,8 +4,7 @@ import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "../../generated/prisma/client";
 
-// Configure Neon serverless to force IPv4 connections over HTTPS (port 443)
-// to prevent IPv6 routing timeouts and bypass local port 5432 firewall blocks.
+// Force IPv4 connections over HTTPS (port 443) to prevent IPv6 routing timeouts
 neonConfig.fetchFunction = function (url: string | URL, options: Record<string, any> = {}) {
   return new Promise((resolve, reject) => {
     const parsedUrl = typeof url === "string" ? new URL(url) : url;
@@ -46,3 +45,6 @@ const adapter = new PrismaNeonHttp(connectionString, {
 const prisma = new PrismaClient({ adapter });
 
 export { prisma };
+
+
+

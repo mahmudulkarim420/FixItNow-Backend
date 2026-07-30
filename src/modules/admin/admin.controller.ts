@@ -68,6 +68,26 @@ const getPaymentById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllReviews = catchAsync(async (_req: Request, res: Response) => {
+  const result = await AdminServices.getAllReviews();
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Reviews retrieved successfully!",
+    data: result,
+  });
+});
+
+const deleteReviewById = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminServices.deleteReviewById(req.params.id as string);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Review deleted successfully!",
+    data: result,
+  });
+});
+
 export const AdminControllers = {
   getAllUsers,
   toggleUserStatus,
@@ -75,4 +95,7 @@ export const AdminControllers = {
   getBookingById,
   getAllPayments,
   getPaymentById,
+  getAllReviews,
+  deleteReviewById,
 };
+

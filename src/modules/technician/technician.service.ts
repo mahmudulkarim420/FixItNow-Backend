@@ -51,9 +51,13 @@ const updateBookingStatus = async (
     throw new AppError(403, "You are not authorized to update this booking!");
   }
 
-  const result = await prisma.booking.update({
+  await prisma.booking.update({
     where: { id: bookingId },
     data: { status },
+  });
+
+  const result = await prisma.booking.findUnique({
+    where: { id: bookingId },
     include: {
       service: true,
       customer: { select: { name: true, email: true } },

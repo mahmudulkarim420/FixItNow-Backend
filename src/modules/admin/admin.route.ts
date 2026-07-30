@@ -177,4 +177,48 @@ router.get(
   AdminControllers.getPaymentById,
 );
 
+/**
+ * @swagger
+ * /api/admin/reviews:
+ *   get:
+ *     summary: Get all reviews
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of reviews
+ */
+router.get(
+  "/reviews",
+  auth("ADMIN"),
+  AdminControllers.getAllReviews,
+);
+
+/**
+ * @swagger
+ * /api/admin/reviews/{id}:
+ *   delete:
+ *     summary: Delete review by ID
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Review deleted
+ */
+router.delete(
+  "/reviews/:id",
+  auth("ADMIN"),
+  validateParams(idParamValidationSchema),
+  AdminControllers.deleteReviewById,
+);
+
 export const AdminRoutes = router;
+

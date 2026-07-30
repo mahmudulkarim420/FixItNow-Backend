@@ -15,8 +15,8 @@ const createReview = async (customerId: string, payload: TCreateReviewPayload) =
     throw new AppError(403, "You are not authorized to review this booking!");
   }
 
-  if (booking.status !== "COMPLETED") {
-    throw new AppError(400, "You can only leave a review after the job is COMPLETED");
+  if (booking.status !== "COMPLETED" && booking.status !== "PAID") {
+    throw new AppError(400, "You can only leave a review after the job is completed or paid.");
   }
 
   const existingReview = await prisma.review.findUnique({
@@ -29,7 +29,7 @@ const createReview = async (customerId: string, payload: TCreateReviewPayload) =
 
   const technicianProfileId = booking.technicianProfileId;
 
-  const review = await prisma.review.create({
+  const created = await prisma.review.create({
     data: {
       bookingId: payload.bookingId,
       customerId,
@@ -37,28 +37,56 @@ const createReview = async (customerId: string, payload: TCreateReviewPayload) =
       rating: payload.rating,
       comment: payload.comment,
     },
+  });
+
+  const review = await prisma.review.findUnique({
+    where: { id: created.id },
     include: {
       customer: { select: { name: true, email: true } },
-      technicianProfile: { select: { id: true } },
+      technicianProfile: { include: { user: { select: { name: true } } } },
     },
   });
 
-  const reviews = await prisma.review.findMany({
-    where: { technicianProfileId },
-    select: { rating: true },
-  });
+  if (technicianProfileId) {
+    const reviews = await prisma.review.findMany({
+      where: { technicianProfileId },
+      select: { rating: true },
+    });
 
-  const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+    const totalReviews = reviews.length;
+    const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
 
-  await prisma.technicianProfile.update({
-    where: { id: technicianProfileId },
-    data: { totalReviews, averageRating },
-  });
+    await prisma.technicianProfile.update({
+      where: { id: technicianProfileId },
+      data: { totalReviews, averageRating },
+    });
+  }
 
   return review;
 };
 
+const getMyReviews = async (userId: string, role: string) => {
+  const where: any = {};
+  if (role === "CUSTOMER") {
+    where.customerId = userId;
+  } else if (role === "TECHNICIAN") {
+    where.technicianProfile = { userId };
+  }
+
+  const reviews = await prisma.review.findMany({
+    where,
+    include: {
+      customer: { select: { name: true, email: true } },
+      technicianProfile: { include: { user: { select: { name: true } } } },
+      booking: { include: { service: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return reviews;
+};
+
 export const ReviewServices = {
   createReview,
+  getMyReviews,
 };

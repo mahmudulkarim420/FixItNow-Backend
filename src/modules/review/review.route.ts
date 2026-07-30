@@ -16,6 +16,24 @@ const router = express.Router();
 /**
  * @swagger
  * /api/reviews:
+ *   get:
+ *     summary: Get reviews for current user
+ *     tags: [Review]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of reviews
+ */
+router.get(
+  "/",
+  auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
+  ReviewControllers.getMyReviews
+);
+
+/**
+ * @swagger
+ * /api/reviews:
  *   post:
  *     summary: Create a review
  *     tags: [Review]

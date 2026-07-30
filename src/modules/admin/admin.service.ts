@@ -112,6 +112,33 @@ const getPaymentById = async (paymentId: string) => {
   return result;
 };
 
+const getAllReviews = async () => {
+  const result = await prisma.review.findMany({
+    include: {
+      customer: { select: { name: true, email: true } },
+      technicianProfile: { include: { user: { select: { name: true, email: true } } } },
+      booking: { include: { service: { select: { title: true } } } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
+const deleteReviewById = async (reviewId: string) => {
+  const review = await prisma.review.findUnique({ where: { id: reviewId } });
+
+  if (!review) {
+    throw new AppError(404, "Review not found!");
+  }
+
+  const result = await prisma.review.delete({
+    where: { id: reviewId },
+  });
+
+  return result;
+};
+
 export const AdminServices = {
   getAllUsers,
   toggleUserStatus,
@@ -119,4 +146,7 @@ export const AdminServices = {
   getBookingById,
   getAllPayments,
   getPaymentById,
+  getAllReviews,
+  deleteReviewById,
 };
+

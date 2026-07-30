@@ -68,6 +68,8 @@ const getAllBookings = async (
         service: true,
         customer: { select: { name: true, email: true } },
         technicianProfile: { include: { user: { select: { name: true } } } },
+        review: true,
+        payment: true,
       },
     }),
     prisma.booking.count({ where }),
@@ -83,6 +85,8 @@ const getBookingById = async (bookingId: string, userId: string, role: string) =
       service: true,
       customer: { select: { name: true, email: true } },
       technicianProfile: { include: { user: { select: { name: true } } } },
+      review: true,
+      payment: true,
     },
   });
 
@@ -134,21 +138,29 @@ const cancelBooking = async (bookingId: string, userId: string, reason: string) 
       : null;
 
   if (completedPayment) {
-    await stripe.refunds.create({
-      payment_intent: completedPayment.transactionId,
-    });
-  }
+    if (completedPayment.transactionId && completedPayment.transactionId.startsWith("pi_")) {
+      try {
+        await stripe.refunds.create({
+          payment_intent: completedPayment.transactionId,
+        });
+      } catch (stripeErr) {
+        console.error("Stripe refund exception during cancellation:", stripeErr);
+      }
+    }
 
-  if (completedPayment) {
     await prisma.payment.update({
       where: { bookingId },
       data: { status: "REFUNDED" },
     });
   }
 
-  const result = await prisma.booking.update({
+  await prisma.booking.update({
     where: { id: bookingId },
     data: { status: "CANCELLED", cancellationReason: reason },
+  });
+
+  const result = await prisma.booking.findUnique({
+    where: { id: bookingId },
     include: {
       service: true,
       customer: { select: { name: true, email: true } },

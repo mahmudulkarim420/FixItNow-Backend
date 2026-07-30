@@ -195,22 +195,20 @@ const handleChargeRefunded = async (charge: Stripe.Charge) => {
 
   if (!paymentIntentId) return;
 
-  await prisma.$transaction(async (tx) => {
-    const payment = await tx.payment.findUnique({
-      where: { transactionId: paymentIntentId },
-    });
+  const payment = await prisma.payment.findUnique({
+    where: { transactionId: paymentIntentId },
+  });
 
-    if (!payment || payment.status === "REFUNDED") return;
+  if (!payment || payment.status === "REFUNDED") return;
 
-    await tx.payment.update({
-      where: { id: payment.id },
-      data: { status: "REFUNDED" },
-    });
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { status: "REFUNDED" },
+  });
 
-    await tx.booking.update({
-      where: { id: payment.bookingId },
-      data: { status: "CANCELLED" },
-    });
+  await prisma.booking.update({
+    where: { id: payment.bookingId },
+    data: { status: "CANCELLED" },
   });
 };
 
