@@ -15,16 +15,16 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/reviews:
+ * /api/reviews/top:
  *   get:
- *     summary: Get reviews for current user
+ *     summary: Get top-rated public reviews
  *     tags: [Review]
- *     security:
- *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: List of reviews
+ *         description: List of top reviews
  */
+router.get("/top", ReviewControllers.getTopReviews);
+
 router.get(
   "/",
   auth("CUSTOMER", "TECHNICIAN", "ADMIN"),

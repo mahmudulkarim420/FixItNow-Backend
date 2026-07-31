@@ -88,6 +88,29 @@ const deleteReviewById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getTechnicianApplications = catchAsync(async (_req: Request, res: Response) => {
+  const result = await AdminServices.getTechnicianApplications();
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Technician applications retrieved successfully!",
+    data: result,
+  });
+});
+
+const reviewTechnicianApplication = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminServices.reviewTechnicianApplication(
+    req.params.id as string,
+    req.body.status
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: `Technician application ${req.body.status.toLowerCase()} successfully!`,
+    data: result,
+  });
+});
+
 export const AdminControllers = {
   getAllUsers,
   toggleUserStatus,
@@ -97,5 +120,8 @@ export const AdminControllers = {
   getPaymentById,
   getAllReviews,
   deleteReviewById,
+  getTechnicianApplications,
+  reviewTechnicianApplication,
 };
+
 

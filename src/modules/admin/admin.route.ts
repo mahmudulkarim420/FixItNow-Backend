@@ -220,5 +220,18 @@ router.delete(
   AdminControllers.deleteReviewById,
 );
 
+router.get(
+  "/technician-applications",
+  auth("ADMIN"),
+  AdminControllers.getTechnicianApplications
+);
+
+router.patch(
+  "/technician-applications/:id",
+  auth("ADMIN"),
+  validateParams(idParamValidationSchema),
+  AdminControllers.reviewTechnicianApplication
+);
+
 export const AdminRoutes = router;
 

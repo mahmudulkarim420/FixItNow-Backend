@@ -11,7 +11,11 @@ const paginationQuerySchema = z
     sortBy: z.string().optional(),
     sortOrder: z.enum(["asc", "desc"]).optional(),
     searchTerm: z.string().optional(),
+    search: z.string().optional(),
+    categoryId: z.string().optional(),
+    minPrice: z.string().optional(),
+    maxPrice: z.string().optional(),
   })
-  .strict();
+  .passthrough();
 
 export { idParamValidationSchema, paginationQuerySchema };

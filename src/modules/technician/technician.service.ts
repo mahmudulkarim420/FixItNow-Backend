@@ -152,6 +152,66 @@ const getTechnicianById = async (id: string) => {
   return result;
 };
 
+const applyForTechnician = async (
+  userId: string,
+  payload: any
+) => {
+  const existingProfile = await prisma.technicianProfile.findUnique({
+    where: { userId },
+  });
+
+  if (existingProfile) {
+    if (existingProfile.approvalStatus === "APPROVED") {
+      throw new AppError(400, "You are already an approved technician!");
+    }
+    if (existingProfile.approvalStatus === "PENDING") {
+      throw new AppError(400, "Your application is already pending admin review!");
+    }
+    // If REJECTED, update the existing profile to PENDING
+    const updated = await prisma.technicianProfile.update({
+      where: { userId },
+      data: {
+        bio: payload.bio,
+        skills: payload.skills,
+        experience: payload.experience,
+        hourlyRate: payload.hourlyRate,
+        location: payload.location,
+        availability: (payload.availability || {}) as Prisma.InputJsonValue,
+        approvalStatus: "PENDING",
+        isVerified: false,
+      },
+    });
+    return updated;
+  }
+
+  const created = await prisma.technicianProfile.create({
+    data: {
+      userId,
+      bio: payload.bio,
+      skills: payload.skills,
+      experience: payload.experience,
+      hourlyRate: payload.hourlyRate,
+      location: payload.location,
+      availability: (payload.availability || {}) as Prisma.InputJsonValue,
+      approvalStatus: "PENDING",
+      isVerified: false,
+    },
+  });
+
+  return created;
+};
+
+const getApplicationStatus = async (userId: string) => {
+  const profile = await prisma.technicianProfile.findUnique({
+    where: { userId },
+    include: {
+      user: { select: { id: true, name: true, email: true, role: true } },
+    },
+  });
+
+  return profile;
+};
+
 export const TechnicianServices = {
   getTechnicianBookings,
   updateBookingStatus,
@@ -159,4 +219,7 @@ export const TechnicianServices = {
   updateAvailability,
   getAllTechnicians,
   getTechnicianById,
+  applyForTechnician,
+  getApplicationStatus,
 };
+

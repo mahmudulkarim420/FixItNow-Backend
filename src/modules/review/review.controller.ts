@@ -23,7 +23,20 @@ const getMyReviews = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getTopReviews = catchAsync(async (req: Request, res: Response) => {
+  const limit = req.query.limit ? Number(req.query.limit) : 6;
+  const result = await ReviewServices.getTopReviews(limit);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Top reviews retrieved successfully!",
+    data: result,
+  });
+});
+
 export const ReviewControllers = {
   createReview,
   getMyReviews,
+  getTopReviews,
 };
+

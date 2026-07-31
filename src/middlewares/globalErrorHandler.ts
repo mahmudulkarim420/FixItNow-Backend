@@ -44,12 +44,12 @@ const handlePrismaError = (err: Prisma.PrismaClientKnownRequestError) => {
 };
 
 const globalErrorHandler = (
-  err: unknown,
+  err: any,
   _req: Request,
   res: Response,
   _next: NextFunction
 ) => {
-  let statusCode = 500;
+  let statusCode = typeof err?.statusCode === "number" ? err.statusCode : typeof err?.status === "number" ? err.status : 500;
   let message = "Internal server error";
   let errorSources: TErrorSource[] = [
     {

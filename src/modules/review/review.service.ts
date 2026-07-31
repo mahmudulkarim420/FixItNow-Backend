@@ -86,7 +86,26 @@ const getMyReviews = async (userId: string, role: string) => {
   return reviews;
 };
 
+const getTopReviews = async (limit: number = 6) => {
+  const reviews = await prisma.review.findMany({
+    where: {
+      rating: { gte: 4 },
+    },
+    include: {
+      customer: { select: { name: true, email: true } },
+      technicianProfile: { include: { user: { select: { name: true } } } },
+      booking: { include: { service: { select: { title: true } } } },
+    },
+    orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+    take: limit,
+  });
+
+  return reviews;
+};
+
 export const ReviewServices = {
   createReview,
   getMyReviews,
+  getTopReviews,
 };
+

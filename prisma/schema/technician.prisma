@@ -11,6 +11,7 @@ model TechnicianProfile {
   averageRating Float  @default(0)
   availability Json     @default("{}")
   isVerified   Boolean  @default(false)
+  approvalStatus ApplicationStatus @default(APPROVED)
 
   services Service[]
   bookings Booking[]

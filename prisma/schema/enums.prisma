@@ -25,3 +25,10 @@ enum PaymentStatus {
   FAILED
   REFUNDED
 }
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+

@@ -6,6 +6,7 @@ import config from "../../config";
 import { Prisma } from "../../../generated/prisma/client";
 import type { JwtPayload } from "../../interfaces/payloads";
 import type { TRegisterPayload, TLoginPayload } from "./auth.validation";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 
 const registerUser = async (payload: TRegisterPayload) => {
   const isUserExists = await prisma.user.findUnique({
@@ -17,13 +18,17 @@ const registerUser = async (payload: TRegisterPayload) => {
   }
 
   const hashedPassword = await bcrypt.hash(payload.password, 10);
+  const avatarUrl = payload.avatar ? await uploadToCloudinary(payload.avatar) : null;
+
+  const userRole = payload.role || "CUSTOMER";
 
   const newUser = await prisma.user.create({
     data: {
       name: payload.name,
       email: payload.email,
       password: hashedPassword,
-      role: payload.role,
+      role: userRole,
+      avatar: avatarUrl,
     },
   });
 
@@ -80,6 +85,7 @@ const loginUser = async (payload: TLoginPayload) => {
   const userWithoutPassword = await prisma.user.findUnique({
     where: { email: payload.email },
     omit: { password: true },
+    include: { technicianProfile: true },
   });
 
   return { accessToken, refreshToken, user: userWithoutPassword };
@@ -89,6 +95,7 @@ const getMe = async (userId: string) => {
   const result = await prisma.user.findUnique({
     where: { id: userId },
     omit: { password: true },
+    include: { technicianProfile: true },
   });
 
   if (!result) {
@@ -162,6 +169,9 @@ const updateProfile = async (userId: string, payload: import("./auth.validation"
   const userDataToUpdate: Record<string, any> = {};
   if (payload.name) userDataToUpdate.name = payload.name;
   if (payload.email) userDataToUpdate.email = payload.email;
+  if (payload.avatar !== undefined) {
+    userDataToUpdate.avatar = payload.avatar ? await uploadToCloudinary(payload.avatar) : null;
+  }
   if (payload.password) {
     userDataToUpdate.password = await bcrypt.hash(payload.password, 10);
   }

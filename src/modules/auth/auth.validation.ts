@@ -8,11 +8,10 @@ const registerValidationSchema = z.object({
       password: z
         .string({ message: "Password is required" })
         .min(6, "Password must be at least 6 characters long"),
-      role: z.enum(["CUSTOMER", "TECHNICIAN"], {
-        message: "Role must be either CUSTOMER or TECHNICIAN",
-      }),
+      role: z.enum(["CUSTOMER", "TECHNICIAN"]).optional().default("CUSTOMER"),
+      avatar: z.string().optional(),
     })
-    .strict(),
+    .passthrough(),
 });
 
 const loginValidationSchema = z.object({
@@ -30,6 +29,7 @@ const updateProfileValidationSchema = z.object({
       name: z.string().trim().min(1, "Name cannot be empty").optional(),
       email: z.string().trim().email("Invalid email address").optional(),
       password: z.string().min(6, "Password must be at least 6 characters long").optional(),
+      avatar: z.string().optional(),
       bio: z.string().optional(),
       skills: z.array(z.string()).optional(),
       experience: z.number().min(0, "Experience must be non-negative").optional(),

@@ -28,6 +28,19 @@ const router = express.Router();
  *       200:
  *         description: List of bookings
  */
+router.post(
+  "/apply",
+  auth("CUSTOMER", "TECHNICIAN"),
+  validateRequest(TechnicianValidations.applyTechnicianValidationSchema),
+  TechnicianControllers.applyForTechnician
+);
+
+router.get(
+  "/application-status",
+  auth("CUSTOMER", "TECHNICIAN", "ADMIN"),
+  TechnicianControllers.getApplicationStatus
+);
+
 router.get(
   "/bookings",
   auth("TECHNICIAN"),

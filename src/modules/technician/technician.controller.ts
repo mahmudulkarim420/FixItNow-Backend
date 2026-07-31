@@ -71,6 +71,26 @@ const getTechnicianById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const applyForTechnician = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.applyForTechnician(req.user!.id, req.body);
+
+  sendResponse(res, {
+    statusCode: 201,
+    message: "Technician application submitted successfully!",
+    data: result,
+  });
+});
+
+const getApplicationStatus = catchAsync(async (req: Request, res: Response) => {
+  const result = await TechnicianServices.getApplicationStatus(req.user!.id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    message: "Application status retrieved successfully!",
+    data: result,
+  });
+});
+
 export const TechnicianControllers = {
   getTechnicianBookings,
   updateBookingStatus,
@@ -78,4 +98,7 @@ export const TechnicianControllers = {
   updateAvailability,
   getAllTechnicians,
   getTechnicianById,
+  applyForTechnician,
+  getApplicationStatus,
 };
+

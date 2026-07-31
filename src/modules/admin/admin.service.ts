@@ -139,6 +139,60 @@ const deleteReviewById = async (reviewId: string) => {
   return result;
 };
 
+const getTechnicianApplications = async () => {
+  const result = await prisma.technicianProfile.findMany({
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, role: true, status: true, createdAt: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
+const reviewTechnicianApplication = async (
+  profileId: string,
+  approvalStatus: "APPROVED" | "REJECTED"
+) => {
+  const profile = await prisma.technicianProfile.findUnique({
+    where: { id: profileId },
+  });
+
+  if (!profile) {
+    throw new AppError(404, "Technician application profile not found!");
+  }
+
+  const isApproved = approvalStatus === "APPROVED";
+  const newRole = isApproved ? "TECHNICIAN" : "CUSTOMER";
+
+  // 1. Update user role
+  await prisma.user.update({
+    where: { id: profile.userId },
+    data: { role: newRole },
+  });
+
+  // 2. Update profile status and verification flag
+  await prisma.technicianProfile.update({
+    where: { id: profileId },
+    data: {
+      approvalStatus,
+      isVerified: isApproved,
+    },
+  });
+
+  // 3. Retrieve enriched result with user details
+  const updatedProfile = await prisma.technicianProfile.findUnique({
+    where: { id: profileId },
+    include: {
+      user: { select: { id: true, name: true, email: true, role: true } },
+    },
+  });
+
+  return updatedProfile;
+};
+
 export const AdminServices = {
   getAllUsers,
   toggleUserStatus,
@@ -148,5 +202,8 @@ export const AdminServices = {
   getPaymentById,
   getAllReviews,
   deleteReviewById,
+  getTechnicianApplications,
+  reviewTechnicianApplication,
 };
+
 
