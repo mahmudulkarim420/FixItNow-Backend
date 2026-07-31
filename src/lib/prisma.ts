@@ -37,11 +37,17 @@ neonConfig.fetchFunction = function (url: string | URL, options: Record<string, 
   });
 };
 
-const connectionString = process.env.DATABASE_URL!;
-const adapter = new PrismaNeonHttp(connectionString, {
+const connectionString = process.env.DATABASE_URL || "";
+
+if (!connectionString) {
+  console.warn("⚠️ DATABASE_URL environment variable is missing in environment settings.");
+}
+
+const adapter = new PrismaNeonHttp(connectionString || "postgresql://invalid:invalid@localhost:5432/invalid", {
   arrayMode: false,
   fullResults: false,
 });
+
 const prisma = new PrismaClient({ adapter });
 
 export { prisma };
