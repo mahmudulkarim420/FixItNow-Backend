@@ -1,4 +1,4 @@
-import type { Role } from "../../generated/prisma";
+import type { Role } from "@prisma/client";
 
 export type PaginationQuery = {
   page?: string;

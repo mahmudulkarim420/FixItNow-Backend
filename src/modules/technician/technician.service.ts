@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { parsePagination, buildMeta } from "../../utils/pagination";
-import { Prisma, BookingStatus } from "../../../generated/prisma";
+import { Prisma, BookingStatus } from "@prisma/client";
 import type { PaginationQuery } from "../../interfaces/payloads";
 import type { TUpdateProfilePayload } from "./technician.validation";
 

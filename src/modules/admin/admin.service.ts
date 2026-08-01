@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { parsePagination, buildMeta } from "../../utils/pagination";
-import { Prisma, Status } from "../../../generated/prisma";
+import { Prisma, Status } from "@prisma/client";
 import type { PaginationQuery } from "../../interfaces/payloads";
 
 const getAllUsers = async (query: PaginationQuery) => {

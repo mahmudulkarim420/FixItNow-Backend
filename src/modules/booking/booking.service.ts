@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
 import { parsePagination, buildMeta } from "../../utils/pagination";
-import { Prisma } from "../../../generated/prisma";
+import { Prisma } from "@prisma/client";
 import { assertTransition } from "./bookingStatus";
 import type { PaginationQuery } from "../../interfaces/payloads";
 import type { TCreateBookingPayload } from "./booking.validation";

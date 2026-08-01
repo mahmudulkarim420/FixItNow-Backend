@@ -5,10 +5,10 @@
   "main": "server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma migrate deploy && prisma generate && tsdown ./src/server.ts",
-    "start": "node dist/server.mjs",
+    "build": "prisma generate && esbuild src/server.ts --bundle --platform=node --packages=external --format=esm --outfile=dist/server.js",
+    "start": "node dist/server.js",
+    "migrate": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",
-    "vercel-build": "prisma generate && tsc",
     "stripe:webhook": "stripe listen --forward-to localhost:5000/api/payments/webhook"
   },
   "keywords": [],
