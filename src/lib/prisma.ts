@@ -4,9 +4,13 @@ import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
-// In production / cloud environments (Railway, Vercel, etc.), use standard global fetch.
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
+
+// In production / cloud environments, use standard global fetch.
 // Only override fetchFunction in local development if needed for IPv4 fallback.
-if (!process.env.VERCEL && !process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== "production") {
+if (!isProduction) {
   neonConfig.fetchFunction = function (url: string | URL, options: Record<string, any> = {}) {
     return new Promise((resolve, reject) => {
       const parsedUrl = typeof url === "string" ? new URL(url) : url;

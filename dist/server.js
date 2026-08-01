@@ -14,7 +14,8 @@ import https from "https";
 import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-if (!process.env.VERCEL && !process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== "production") {
+var isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
+if (!isProduction) {
   neonConfig.fetchFunction = function(url, options2 = {}) {
     return new Promise((resolve, reject) => {
       const parsedUrl = typeof url === "string" ? new URL(url) : url;
@@ -76,7 +77,7 @@ var adapter = new PrismaNeonHttp(connectionString || "postgresql://invalid:inval
 var prisma = new PrismaClient({ adapter });
 
 // src/utils/AppError.ts
-var AppError = class _AppError extends Error {
+var AppError2 = class _AppError extends Error {
   statusCode;
   constructor(statusCode, message) {
     super(message);
@@ -85,7 +86,7 @@ var AppError = class _AppError extends Error {
     Error.captureStackTrace(this, _AppError);
   }
 };
-var AppError_default = AppError;
+var AppError_default = AppError2;
 
 // src/config/index.ts
 import dotenv from "dotenv";
@@ -363,6 +364,14 @@ var catchAsync = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next))
 var catchAsync_default = catchAsync;
 
 // src/modules/auth/auth.controller.ts
+var getCookieOptions = () => {
+  const isProduction2 = process.env.NODE_ENV === "production" || config_default.nodeEnv === "production" || Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
+  return {
+    httpOnly: true,
+    secure: isProduction2,
+    sameSite: isProduction2 ? "none" : "lax"
+  };
+};
 var registerUser2 = catchAsync_default(async (req, res) => {
   const result = await AuthServices.registerUser(req.body);
   sendResponse_default(res, {
@@ -373,20 +382,17 @@ var registerUser2 = catchAsync_default(async (req, res) => {
 });
 var loginUser2 = catchAsync_default(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
-  res.cookie("accessToken", result.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
-  res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
+  const cookieOptions = getCookieOptions();
+  res.cookie("accessToken", result.accessToken, cookieOptions);
+  res.cookie("refreshToken", result.refreshToken, cookieOptions);
   sendResponse_default(res, {
     statusCode: 200,
     message: "User logged in successfully!",
-    data: result.user
+    data: {
+      ...result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken
+    }
   });
 });
 var getMe2 = catchAsync_default(async (req, res) => {
@@ -398,16 +404,9 @@ var getMe2 = catchAsync_default(async (req, res) => {
   });
 });
 var logout = catchAsync_default(async (_req, res) => {
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
+  const cookieOptions = getCookieOptions();
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
   sendResponse_default(res, {
     statusCode: 200,
     message: "User logged out successfully!",
@@ -415,26 +414,21 @@ var logout = catchAsync_default(async (_req, res) => {
   });
 });
 var refreshToken2 = catchAsync_default(async (req, res) => {
-  const token = req.cookies.refreshToken;
+  const token = req.cookies?.refreshToken || req.body?.refreshToken || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : req.headers.authorization);
   if (!token) {
-    throw new AppError_default(401, "Refresh token is missing!");
+    throw new AppError(401, "Refresh token is missing!");
   }
   const result = await AuthServices.refreshToken(token);
-  res.cookie("accessToken", result.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
-  res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
+  const cookieOptions = getCookieOptions();
+  res.cookie("accessToken", result.accessToken, cookieOptions);
+  res.cookie("refreshToken", result.refreshToken, cookieOptions);
   sendResponse_default(res, {
     statusCode: 200,
     message: "Access token refreshed successfully!",
     data: {
-      refreshed: true
+      refreshed: true,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken
     }
   });
 });
@@ -448,16 +442,9 @@ var updateProfile2 = catchAsync_default(async (req, res) => {
 });
 var deleteProfile2 = catchAsync_default(async (req, res) => {
   await AuthServices.deleteProfile(req.user.id);
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  });
+  const cookieOptions = getCookieOptions();
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
   sendResponse_default(res, {
     statusCode: 200,
     message: "User account deleted successfully!",
@@ -532,7 +519,8 @@ import jwt2 from "jsonwebtoken";
 var auth = (...requiredRoles) => {
   return async (req, _res, next) => {
     try {
-      const token = req.cookies.accessToken;
+      const authHeader = req.headers.authorization;
+      const token = req.cookies?.accessToken || (authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader);
       if (!token) {
         throw new AppError_default(401, "You are not authorized! Token missing.");
       }

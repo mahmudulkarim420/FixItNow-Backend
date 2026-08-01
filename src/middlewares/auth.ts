@@ -7,7 +7,12 @@ import { prisma } from '../lib/prisma';
 export const auth = (...requiredRoles: string[]) => {
   return async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      const token = req.cookies.accessToken;
+      const authHeader = req.headers.authorization;
+      const token =
+        req.cookies?.accessToken ||
+        (authHeader && authHeader.startsWith("Bearer ")
+          ? authHeader.split(" ")[1]
+          : authHeader);
 
       if (!token) {
         throw new AppError(401, 'You are not authorized! Token missing.');

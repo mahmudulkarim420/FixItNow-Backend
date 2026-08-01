@@ -3,6 +3,20 @@ import { AuthServices } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
 import catchAsync from "../../utils/catchAsync";
 import AppError from "../../utils/AppError";
+import config from "../../config";
+
+const getCookieOptions = () => {
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    config.nodeEnv === "production" ||
+    Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
+
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  };
+};
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.registerUser(req.body);
@@ -16,23 +30,19 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.loginUser(req.body);
+  const cookieOptions = getCookieOptions();
 
-  res.cookie("accessToken", result.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-
-  res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.cookie("accessToken", result.accessToken, cookieOptions);
+  res.cookie("refreshToken", result.refreshToken, cookieOptions);
 
   sendResponse(res, {
     statusCode: 200,
     message: "User logged in successfully!",
-    data: result.user,
+    data: {
+      ...result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    },
   });
 });
 
@@ -47,17 +57,10 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (_req: Request, res: Response) => {
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  const cookieOptions = getCookieOptions();
 
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
 
   sendResponse(res, {
     statusCode: 200,
@@ -67,31 +70,30 @@ const logout = catchAsync(async (_req: Request, res: Response) => {
 });
 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-  const token = req.cookies.refreshToken;
+  const token =
+    req.cookies?.refreshToken ||
+    req.body?.refreshToken ||
+    (req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.split(" ")[1]
+      : req.headers.authorization);
 
   if (!token) {
     throw new AppError(401, "Refresh token is missing!");
   }
 
   const result = await AuthServices.refreshToken(token);
+  const cookieOptions = getCookieOptions();
 
-  res.cookie("accessToken", result.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-
-  res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.cookie("accessToken", result.accessToken, cookieOptions);
+  res.cookie("refreshToken", result.refreshToken, cookieOptions);
 
   sendResponse(res, {
     statusCode: 200,
     message: "Access token refreshed successfully!",
     data: {
       refreshed: true,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
     },
   });
 });
@@ -108,18 +110,10 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
 
 const deleteProfile = catchAsync(async (req: Request, res: Response) => {
   await AuthServices.deleteProfile(req.user!.id);
+  const cookieOptions = getCookieOptions();
 
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
 
   sendResponse(res, {
     statusCode: 200,
