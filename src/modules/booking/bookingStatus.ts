@@ -1,4 +1,4 @@
-import { BookingStatus } from "../../../generated/prisma/client";
+import { BookingStatus } from "../../../generated/prisma";
 import AppError from "../../utils/AppError";
 
 const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {

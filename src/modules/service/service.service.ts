@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import { parsePagination, buildMeta } from "../../utils/pagination";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma";
 import type { PaginationQuery } from "../../interfaces/payloads";
 import type { TCreateServicePayload, TUpdateServicePayload } from "./service.validation";
 

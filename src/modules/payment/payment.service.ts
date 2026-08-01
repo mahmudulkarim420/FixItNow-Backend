@@ -3,7 +3,7 @@ import AppError from "../../utils/AppError";
 import stripe from "../../lib/stripe";
 import config from "../../config";
 import type Stripe from "stripe";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma";
 
 const createCheckoutSession = async (bookingId: string, userId: string) => {
   const booking = await prisma.booking.findUnique({

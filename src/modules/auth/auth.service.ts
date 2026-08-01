@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import config from "../../config";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma";
 import type { JwtPayload } from "../../interfaces/payloads";
 import type { TRegisterPayload, TLoginPayload } from "./auth.validation";
 import { uploadToCloudinary } from "../../utils/cloudinary";

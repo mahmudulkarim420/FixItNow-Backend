@@ -2,7 +2,7 @@ import "dotenv/config";
 import https from "https";
 import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeonHttp } from "@prisma/adapter-neon";
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from "../../generated/prisma";
 
 // In Vercel / production serverless environments, use standard global fetch.
 // Only override fetchFunction locally if needed for IPv4 fallback.
