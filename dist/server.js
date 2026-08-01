@@ -77,7 +77,7 @@ var adapter = new PrismaNeonHttp(connectionString || "postgresql://invalid:inval
 var prisma = new PrismaClient({ adapter });
 
 // src/utils/AppError.ts
-var AppError2 = class _AppError extends Error {
+var AppError = class _AppError extends Error {
   statusCode;
   constructor(statusCode, message) {
     super(message);
@@ -86,7 +86,7 @@ var AppError2 = class _AppError extends Error {
     Error.captureStackTrace(this, _AppError);
   }
 };
-var AppError_default = AppError2;
+var AppError_default = AppError;
 
 // src/config/index.ts
 import dotenv from "dotenv";
@@ -369,7 +369,8 @@ var getCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction2,
-    sameSite: isProduction2 ? "none" : "lax"
+    sameSite: isProduction2 ? "lax" : "lax",
+    path: "/"
   };
 };
 var registerUser2 = catchAsync_default(async (req, res) => {
@@ -388,11 +389,7 @@ var loginUser2 = catchAsync_default(async (req, res) => {
   sendResponse_default(res, {
     statusCode: 200,
     message: "User logged in successfully!",
-    data: {
-      ...result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken
-    }
+    data: result.user
   });
 });
 var getMe2 = catchAsync_default(async (req, res) => {
@@ -414,9 +411,9 @@ var logout = catchAsync_default(async (_req, res) => {
   });
 });
 var refreshToken2 = catchAsync_default(async (req, res) => {
-  const token = req.cookies?.refreshToken || req.body?.refreshToken || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : req.headers.authorization);
+  const token = req.cookies?.refreshToken || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : req.headers.authorization);
   if (!token) {
-    throw new AppError(401, "Refresh token is missing!");
+    throw new AppError_default(401, "Refresh token is missing!");
   }
   const result = await AuthServices.refreshToken(token);
   const cookieOptions = getCookieOptions();
@@ -426,9 +423,7 @@ var refreshToken2 = catchAsync_default(async (req, res) => {
     statusCode: 200,
     message: "Access token refreshed successfully!",
     data: {
-      refreshed: true,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken
+      refreshed: true
     }
   });
 });

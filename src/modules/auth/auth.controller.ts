@@ -14,7 +14,8 @@ const getCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    sameSite: isProduction ? ("lax" as const) : ("lax" as const),
+    path: "/",
   };
 };
 
@@ -38,11 +39,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
     message: "User logged in successfully!",
-    data: {
-      ...result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-    },
+    data: result.user,
   });
 });
 
@@ -72,7 +69,6 @@ const logout = catchAsync(async (_req: Request, res: Response) => {
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
   const token =
     req.cookies?.refreshToken ||
-    req.body?.refreshToken ||
     (req.headers.authorization?.startsWith("Bearer ")
       ? req.headers.authorization.split(" ")[1]
       : req.headers.authorization);
@@ -92,8 +88,6 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     message: "Access token refreshed successfully!",
     data: {
       refreshed: true,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
     },
   });
 });
