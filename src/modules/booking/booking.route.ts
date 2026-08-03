@@ -13,14 +13,15 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Booking
- *   description: Booking operations
+ *   description: Service booking creation, retrieval, and cancellation
  */
 
 /**
  * @swagger
  * /api/bookings:
  *   post:
- *     summary: Create a booking
+ *     summary: Create a service booking
+ *     description: Customers can create a booking for a specific service, scheduled date, and time slot.
  *     tags: [Booking]
  *     security:
  *       - cookieAuth: []
@@ -38,15 +39,38 @@ const router = express.Router();
  *             properties:
  *               serviceId:
  *                 type: string
+ *                 description: Valid Service UUID
+ *                 example: "s123"
  *               scheduledDate:
  *                 type: string
+ *                 description: Date string (YYYY-MM-DD)
+ *                 example: "2026-08-15"
  *               timeSlot:
  *                 type: string
+ *                 example: "10:00-12:00"
  *               contactNumber:
  *                 type: string
+ *                 example: "+1234567890"
  *     responses:
  *       201:
- *         description: Booking created
+ *         description: Booking created successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               statusCode: 201
+ *               message: "Booking created successfully!"
+ *               data:
+ *                 id: "b123"
+ *                 status: "PENDING"
+ *                 scheduledDate: "2026-08-15"
+ *                 timeSlot: "10:00-12:00"
+ *       400:
+ *         description: Validation error or slot unavailable
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (Customers only)
  */
 router.post(
   "/",
@@ -60,12 +84,51 @@ router.post(
  * /api/bookings:
  *   get:
  *     summary: Get all bookings
+ *     description: Retrieve bookings for the authenticated user (Filtered by user role - Customer, Technician, or Admin).
  *     tags: [Booking]
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *         description: Field name to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order
  *     responses:
  *       200:
- *         description: List of bookings
+ *         description: List of bookings retrieved successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               statusCode: 200
+ *               message: "Bookings retrieved successfully!"
+ *               meta:
+ *                 page: 1
+ *                 limit: 10
+ *                 total: 3
+ *                 totalPage: 1
+ *               data: []
+ *       401:
+ *         description: Unauthorized
  */
 router.get(
   "/",
@@ -78,7 +141,8 @@ router.get(
  * @swagger
  * /api/bookings/{id}:
  *   get:
- *     summary: Get booking by ID
+ *     summary: Get booking details by ID
+ *     description: Retrieve detailed information for a specific booking.
  *     tags: [Booking]
  *     security:
  *       - cookieAuth: []
@@ -88,9 +152,16 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *         description: Booking UUID
  *     responses:
  *       200:
- *         description: Booking details
+ *         description: Booking details retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (Not booking owner or assigned technician)
+ *       404:
+ *         description: Booking not found
  */
 router.get(
   "/:id",
@@ -178,139 +249,14 @@ router.get(
  *                         status:
  *                           type: string
  *                           example: REFUNDED
- *             examples:
- *               cancelledNoRefund:
- *                 summary: Cancelled without refund (ACCEPTED + PENDING)
- *                 value:
- *                   success: true
- *                   message: "Booking cancelled successfully!"
- *                   data:
- *                     id: "b1f0c2a0-..."
- *                     status: CANCELLED
- *                     cancellationReason: "Booked by mistake"
- *                     payment:
- *                       status: PENDING
- *               cancelledWithRefund:
- *                 summary: Cancelled with refund (PAID + COMPLETED)
- *                 value:
- *                   success: true
- *                   message: "Booking cancelled successfully!"
- *                   data:
- *                     id: "b1f0c2a0-..."
- *                     status: CANCELLED
- *                     cancellationReason: "No longer needed"
- *                     payment:
- *                       status: REFUNDED
  *       400:
  *         description: Booking cannot be cancelled.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                 errorSources:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       path:
- *                         type: string
- *                       message:
- *                         type: string
- *             examples:
- *               inProgress:
- *                 summary: Service already started
- *                 value:
- *                   success: false
- *                   message: "Booking cannot be cancelled after the service has started."
- *                   errorSources:
- *                     - path: ""
- *                       message: "Booking cannot be cancelled after the service has started."
- *               completed:
- *                 summary: Booking already completed
- *                 value:
- *                   success: false
- *                   message: "Completed bookings cannot be cancelled."
- *                   errorSources:
- *                     - path: ""
- *                       message: "Completed bookings cannot be cancelled."
- *               alreadyCancelled:
- *                 summary: Booking already cancelled
- *                 value:
- *                   success: false
- *                   message: "Booking has already been cancelled."
- *                   errorSources:
- *                     - path: ""
- *                       message: "Booking has already been cancelled."
  *       401:
  *         description: Not authenticated.
  *       403:
  *         description: Authenticated user is not the booking owner.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "You are not authorized to cancel this booking!"
- *                 errorSources:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       path:
- *                         type: string
- *                       message:
- *                         type: string
- *             examples:
- *               unauthorized:
- *                 summary: Not the booking owner
- *                 value:
- *                   success: false
- *                   message: "You are not authorized to cancel this booking!"
- *                   errorSources:
- *                     - path: ""
- *                       message: "You are not authorized to cancel this booking!"
  *       404:
  *         description: Booking not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Booking not found!"
- *                 errorSources:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       path:
- *                         type: string
- *                       message:
- *                         type: string
- *             examples:
- *               notFound:
- *                 summary: Booking does not exist
- *                 value:
- *                   success: false
- *                   message: "Booking not found!"
- *                   errorSources:
- *                     - path: ""
- *                       message: "Booking not found!"
  */
 router.patch(
   "/:id/cancel",

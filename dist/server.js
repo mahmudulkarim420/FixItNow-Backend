@@ -2599,7 +2599,7 @@ var options = {
     info: {
       title: "FixItNow API",
       version: "1.0.0",
-      description: "API documentation for FixItNow"
+      description: "API documentation for FixItNow service marketplace backend"
     },
     servers: [
       {
@@ -2612,7 +2612,8 @@ var options = {
         cookieAuth: {
           type: "apiKey",
           in: "cookie",
-          name: "accessToken"
+          name: "accessToken",
+          description: "HTTP-only JWT access token cookie"
         }
       }
     },
@@ -2622,7 +2623,12 @@ var options = {
       }
     ]
   },
-  apis: ["./src/modules/**/*.route.ts", "./src/app.ts"]
+  apis: [
+    "./src/modules/**/*.route.ts",
+    "./src/app.ts",
+    "./dist/modules/**/*.route.js",
+    "./dist/app.js"
+  ]
 };
 var swaggerSpec = swaggerJsdoc(options);
 

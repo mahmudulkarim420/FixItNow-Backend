@@ -1,13 +1,13 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import config from "./index";
 
-const options = {
+const options: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
     info: {
       title: "FixItNow API",
       version: "1.0.0",
-      description: "API documentation for FixItNow",
+      description: "API documentation for FixItNow service marketplace backend",
     },
     servers: [
       {
@@ -21,6 +21,7 @@ const options = {
           type: "apiKey",
           in: "cookie",
           name: "accessToken",
+          description: "HTTP-only JWT access token cookie",
         },
       },
     },
@@ -30,7 +31,12 @@ const options = {
       },
     ],
   },
-  apis: ["./src/modules/**/*.route.ts", "./src/app.ts"],
+  apis: [
+    "./src/modules/**/*.route.ts",
+    "./src/app.ts",
+    "./dist/modules/**/*.route.js",
+    "./dist/app.js",
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
