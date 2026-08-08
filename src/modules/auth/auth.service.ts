@@ -64,6 +64,13 @@ const loginUser = async (payload: TLoginPayload) => {
     throw new AppError(403, "This user account has been banned!");
   }
 
+  if (!user.password) {
+    throw new AppError(
+      400,
+      "This account was registered with Google. Please continue with Google login."
+    );
+  }
+
   const isPasswordMatched = await bcrypt.compare(
     payload.password,
     user.password
@@ -84,6 +91,77 @@ const loginUser = async (payload: TLoginPayload) => {
 
   const userWithoutPassword = await prisma.user.findUnique({
     where: { email: payload.email },
+    omit: { password: true },
+    include: { technicianProfile: true },
+  });
+
+  return { accessToken, refreshToken, user: userWithoutPassword };
+};
+
+export interface TGoogleUserPayload {
+  googleId: string;
+  email: string;
+  name: string;
+  avatar?: string | null;
+}
+
+const handleGoogleLogin = async (payload: TGoogleUserPayload) => {
+  // Case A: Matching googleId exists -> Login that user
+  let user = await prisma.user.findUnique({
+    where: { googleId: payload.googleId },
+  });
+
+  if (user) {
+    if (user.status === "BANNED") {
+      throw new AppError(403, "This user account has been banned!");
+    }
+  } else {
+    // Case B: Existing email user -> Safely link Google account
+    user = await prisma.user.findUnique({
+      where: { email: payload.email },
+    });
+
+    if (user) {
+      if (user.status === "BANNED") {
+        throw new AppError(403, "This user account has been banned!");
+      }
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: payload.googleId,
+          avatar: user.avatar || payload.avatar || null,
+        },
+      });
+    } else {
+      // Case C: New Google user -> Create account with role CUSTOMER, status ACTIVE
+      user = await prisma.user.create({
+        data: {
+          name: payload.name,
+          email: payload.email,
+          googleId: payload.googleId,
+          provider: "google",
+          password: null,
+          avatar: payload.avatar || null,
+          role: "CUSTOMER",
+          status: "ACTIVE",
+        },
+      });
+    }
+  }
+
+  // Generate standard tokens using existing JWT mechanism
+  const jwtPayload: JwtPayload = { id: user.id, email: user.email, role: user.role };
+
+  const accessToken = jwt.sign(jwtPayload, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn,
+  } as jwt.SignOptions);
+
+  const refreshToken = jwt.sign(jwtPayload, config.jwt.refreshSecret, {
+    expiresIn: config.jwt.refreshExpiresIn,
+  } as jwt.SignOptions);
+
+  const userWithoutPassword = await prisma.user.findUnique({
+    where: { id: user.id },
     omit: { password: true },
     include: { technicianProfile: true },
   });
@@ -239,6 +317,7 @@ const deleteProfile = async (userId: string) => {
 export const AuthServices = {
   registerUser,
   loginUser,
+  handleGoogleLogin,
   getMe,
   refreshToken,
   updateProfile,

@@ -86,6 +86,48 @@ router.post(
 
 /**
  * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Initiate Google OAuth login
+ *     description: Redirects the user to Google OAuth 2.0 consent page.
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: query
+ *         name: redirect
+ *         schema:
+ *           type: string
+ *         description: Optional relative frontend redirect path after login
+ *     responses:
+ *       302:
+ *         description: Redirects to Google consent screen
+ */
+router.get("/google", AuthControllers.googleAuth);
+
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Google OAuth callback handler
+ *     description: Handles callback from Google, exchanges auth code for user profile, sets HTTP-only cookies, and redirects to frontend.
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *     responses:
+ *       302:
+ *         description: Redirects to frontend root or dashboard with auth cookies set
+ */
+router.get("/google/callback", AuthControllers.googleCallback);
+
+/**
+ * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Login user

@@ -4,76 +4,24 @@ import express9 from "express";
 // src/modules/auth/auth.route.ts
 import express from "express";
 
+// src/modules/auth/auth.controller.ts
+import { OAuth2Client } from "google-auth-library";
+
 // src/modules/auth/auth.service.ts
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 // src/lib/prisma.ts
 import "dotenv/config";
-import https from "https";
-import { neonConfig } from "@neondatabase/serverless";
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
+import pg from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-var isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
-if (!isProduction) {
-  neonConfig.fetchFunction = function(url, options2 = {}) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = typeof url === "string" ? new URL(url) : url;
-      const reqHeaders = {};
-      if (options2.headers) {
-        if (typeof options2.headers.forEach === "function") {
-          options2.headers.forEach((v, k) => {
-            reqHeaders[k] = v;
-          });
-        } else {
-          Object.assign(reqHeaders, options2.headers);
-        }
-      }
-      const reqOptions = {
-        hostname: parsedUrl.hostname,
-        port: parsedUrl.port || 443,
-        path: parsedUrl.pathname + parsedUrl.search,
-        method: options2.method || "POST",
-        headers: reqHeaders,
-        family: 4
-      };
-      const req = https.request(reqOptions, (res) => {
-        let data = "";
-        res.on("data", (chunk) => data += chunk);
-        res.on("end", () => {
-          const respHeaders = new Headers();
-          for (const [k, v] of Object.entries(res.headers)) {
-            if (Array.isArray(v)) {
-              v.forEach((val) => respHeaders.append(k, val));
-            } else if (v !== void 0) {
-              respHeaders.set(k, v);
-            }
-          }
-          resolve({
-            ok: res.statusCode ? res.statusCode >= 200 && res.statusCode < 300 : false,
-            status: res.statusCode || 500,
-            statusText: res.statusMessage || "",
-            headers: respHeaders,
-            json: () => Promise.resolve(data ? JSON.parse(data) : null),
-            text: () => Promise.resolve(data),
-            arrayBuffer: () => Promise.resolve(Buffer.from(data))
-          });
-        });
-      });
-      req.on("error", reject);
-      if (options2.body) req.write(options2.body);
-      req.end();
-    });
-  };
-}
 var connectionString = process.env.DATABASE_URL || "";
 if (!connectionString) {
   console.warn("\u26A0\uFE0F DATABASE_URL environment variable is missing in environment settings.");
 }
-var adapter = new PrismaNeonHttp(connectionString || "postgresql://invalid:invalid@localhost:5432/invalid", {
-  arrayMode: false,
-  fullResults: false
-});
+var pool = new pg.Pool({ connectionString });
+var adapter = new PrismaPg(pool);
 var prisma = new PrismaClient({ adapter });
 
 // src/utils/AppError.ts
@@ -110,7 +58,12 @@ var config = {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? ""
   },
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:3000",
-  nodeEnv: process.env.NODE_ENV ?? "development"
+  nodeEnv: process.env.NODE_ENV ?? "development",
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    callbackUrl: process.env.GOOGLE_CALLBACK_URL ?? "http://localhost:5000/api/auth/google/callback"
+  }
 };
 var config_default = config;
 
@@ -202,6 +155,12 @@ var loginUser = async (payload) => {
   if (user.status === "BANNED") {
     throw new AppError_default(403, "This user account has been banned!");
   }
+  if (!user.password) {
+    throw new AppError_default(
+      400,
+      "This account was registered with Google. Please continue with Google login."
+    );
+  }
   const isPasswordMatched = await bcrypt.compare(
     payload.password,
     user.password
@@ -218,6 +177,58 @@ var loginUser = async (payload) => {
   });
   const userWithoutPassword = await prisma.user.findUnique({
     where: { email: payload.email },
+    omit: { password: true },
+    include: { technicianProfile: true }
+  });
+  return { accessToken, refreshToken: refreshToken3, user: userWithoutPassword };
+};
+var handleGoogleLogin = async (payload) => {
+  let user = await prisma.user.findUnique({
+    where: { googleId: payload.googleId }
+  });
+  if (user) {
+    if (user.status === "BANNED") {
+      throw new AppError_default(403, "This user account has been banned!");
+    }
+  } else {
+    user = await prisma.user.findUnique({
+      where: { email: payload.email }
+    });
+    if (user) {
+      if (user.status === "BANNED") {
+        throw new AppError_default(403, "This user account has been banned!");
+      }
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: payload.googleId,
+          avatar: user.avatar || payload.avatar || null
+        }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          name: payload.name,
+          email: payload.email,
+          googleId: payload.googleId,
+          provider: "google",
+          password: null,
+          avatar: payload.avatar || null,
+          role: "CUSTOMER",
+          status: "ACTIVE"
+        }
+      });
+    }
+  }
+  const jwtPayload = { id: user.id, email: user.email, role: user.role };
+  const accessToken = jwt.sign(jwtPayload, config_default.jwt.secret, {
+    expiresIn: config_default.jwt.expiresIn
+  });
+  const refreshToken3 = jwt.sign(jwtPayload, config_default.jwt.refreshSecret, {
+    expiresIn: config_default.jwt.refreshExpiresIn
+  });
+  const userWithoutPassword = await prisma.user.findUnique({
+    where: { id: user.id },
     omit: { password: true },
     include: { technicianProfile: true }
   });
@@ -340,6 +351,7 @@ var deleteProfile = async (userId) => {
 var AuthServices = {
   registerUser,
   loginUser,
+  handleGoogleLogin,
   getMe,
   refreshToken,
   updateProfile,
@@ -364,12 +376,19 @@ var catchAsync = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next))
 var catchAsync_default = catchAsync;
 
 // src/modules/auth/auth.controller.ts
+var getGoogleOAuthClient = () => {
+  return new OAuth2Client(
+    config_default.google.clientId,
+    config_default.google.clientSecret,
+    config_default.google.callbackUrl
+  );
+};
 var getCookieOptions = () => {
-  const isProduction2 = process.env.NODE_ENV === "production" || config_default.nodeEnv === "production" || Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
+  const isProduction = process.env.NODE_ENV === "production" || config_default.nodeEnv === "production" || Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
   return {
     httpOnly: true,
-    secure: isProduction2,
-    sameSite: isProduction2 ? "lax" : "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "lax" : "lax",
     path: "/"
   };
 };
@@ -391,6 +410,78 @@ var loginUser2 = catchAsync_default(async (req, res) => {
     message: "User logged in successfully!",
     data: result.user
   });
+});
+var googleAuth = catchAsync_default(async (req, res) => {
+  const oauth2Client = getGoogleOAuthClient();
+  const redirectTarget = typeof req.query.redirect === "string" ? req.query.redirect : "/";
+  const authorizationUrl = oauth2Client.generateAuthUrl({
+    access_type: "offline",
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email"
+    ],
+    prompt: "select_account",
+    state: redirectTarget
+  });
+  res.redirect(authorizationUrl);
+});
+var getFrontendUrl = (req) => {
+  const host = req.get("host") || "";
+  if (host.includes("localhost") || host.includes("127.0.0.1")) {
+    return "http://localhost:3000";
+  }
+  const isProduction = process.env.NODE_ENV === "production" || config_default.nodeEnv === "production" || Boolean(process.env.BACKEND_URL && !process.env.BACKEND_URL.includes("localhost"));
+  if (isProduction && config_default.frontendUrl) {
+    return config_default.frontendUrl.replace(/\/$/, "");
+  }
+  return (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+};
+var googleCallback = catchAsync_default(async (req, res) => {
+  const code = req.query.code;
+  const error = req.query.error;
+  const state = typeof req.query.state === "string" && req.query.state.startsWith("/") ? req.query.state : "/";
+  const frontendUrl = getFrontendUrl(req);
+  if (error || !code) {
+    return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+  }
+  try {
+    const oauth2Client = getGoogleOAuthClient();
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+    if (!tokens.id_token) {
+      return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
+    const ticket = await oauth2Client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: config_default.google.clientId
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email || !payload.sub) {
+      return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
+    const googleId = payload.sub;
+    const email = payload.email.toLowerCase();
+    const name = payload.name || payload.given_name || email.split("@")[0];
+    const avatar = payload.picture || null;
+    const result = await AuthServices.handleGoogleLogin({
+      googleId,
+      email,
+      name,
+      avatar
+    });
+    const cookieOptions = getCookieOptions();
+    res.cookie("accessToken", result.accessToken, cookieOptions);
+    res.cookie("refreshToken", result.refreshToken, cookieOptions);
+    const redirectPath = state && state !== "/" ? state : "";
+    return res.redirect(
+      `${frontendUrl}${redirectPath ? redirectPath.startsWith("/") ? redirectPath : `/${redirectPath}` : "/"}`
+    );
+  } catch (err) {
+    if (err instanceof AppError_default && err.statusCode === 403) {
+      return res.redirect(`${frontendUrl}/login?error=account_banned`);
+    }
+    return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+  }
 });
 var getMe2 = catchAsync_default(async (req, res) => {
   const result = await AuthServices.getMe(req.user.id);
@@ -449,6 +540,8 @@ var deleteProfile2 = catchAsync_default(async (req, res) => {
 var AuthControllers = {
   registerUser: registerUser2,
   loginUser: loginUser2,
+  googleAuth,
+  googleCallback,
   getMe: getMe2,
   logout,
   refreshToken: refreshToken2,
@@ -548,6 +641,8 @@ router.post(
   validateRequest_default(AuthValidations.registerValidationSchema),
   AuthControllers.registerUser
 );
+router.get("/google", AuthControllers.googleAuth);
+router.get("/google/callback", AuthControllers.googleCallback);
 router.post(
   "/login",
   validateRequest_default(AuthValidations.loginValidationSchema),

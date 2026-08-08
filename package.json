@@ -52,6 +52,7 @@
     "stripe": "^22.3.0",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
+    "google-auth-library": "^9.15.1",
     "ws": "^8.21.1",
     "zod": "^4.4.3"
   },
